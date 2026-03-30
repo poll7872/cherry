@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
@@ -9,8 +9,12 @@ export class UsersService {
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
-  async create(email: string, password: string) {
-    const user = this.userRepository.create({ email, password });
+  async create(data: Partial<User>) {
+    const user = this.userRepository.create(data);
+    return this.userRepository.save(user);
+  }
+
+  async save(user: User) {
     return this.userRepository.save(user);
   }
 
@@ -18,7 +22,15 @@ export class UsersService {
     return this.userRepository.findOne({ where: { email } });
   }
 
-  async findById(id: number) {
-    return this.userRepository.findOne({ where: { id } });
+  async findByResetToken(token: string) {
+    return this.userRepository.findOne({
+      where: { resetToken: token, resetTokenExpires: MoreThan(new Date()) },
+    });
+  }
+
+  async findWithEmailVerification(token: string) {
+    return this.userRepository.findOne({
+      where: { emailVerificationToken: token },
+    });
   }
 }
