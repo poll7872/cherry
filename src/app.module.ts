@@ -10,6 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/typeorm.config';
 import { EmailService } from './email/email.service';
 import { EmailModule } from './email/email.module';
+import { ProjectsModule } from './projects/projects.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { EmailModule } from './email/email.module';
       inject: [ConfigService],
     }),
     EmailModule,
+    ProjectsModule,
   ],
   controllers: [AppController],
   providers: [
