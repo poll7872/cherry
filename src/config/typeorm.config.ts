@@ -13,5 +13,8 @@ export const typeOrmConfig = (
   ssl: false,
   logging: false,
   entities: [__dirname + '/../**/*.entity{.js,.ts}'],
-  synchronize: true,
+  synchronize: true, // !SUPER IMPORTANTE! cambiar a false en producción
+  autoLoadEntities: true,
+  retryAttempts: 3,
+  retryDelay: 3000,
 });
