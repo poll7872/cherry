@@ -22,6 +22,10 @@ export class UsersService {
     return this.userRepository.findOne({ where: { email } });
   }
 
+  async findById(id: string) {
+    return this.userRepository.findOne({ where: { id } });
+  }
+
   async findByResetToken(token: string) {
     return this.userRepository.findOne({
       where: { resetToken: token, resetTokenExpires: MoreThan(new Date()) },
