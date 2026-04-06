@@ -3,14 +3,15 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
   UseInterceptors,
   ClassSerializerInterceptor,
   Put,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -37,6 +38,21 @@ export class ProjectsController {
   @Get(':id')
   findOne(@Param('id') id: string, @GetUser() user: User) {
     return this.projectsService.findOne(id, user);
+  }
+
+  @Get(':id/pdf')
+  async getCompiledPdf(
+    @Param('id') id: string,
+    @GetUser() user: User,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.projectsService.getCompiledPdf(id, user);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="project-${id}.pdf"`,
+    );
+    res.send(pdfBuffer);
   }
 
   @Put(':id')

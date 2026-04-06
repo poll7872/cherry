@@ -9,7 +9,6 @@ import { UsersService } from 'src/users/users.service';
 import bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { EmailService } from 'src/email/email.service';
-import { link } from 'fs';
 
 @Injectable()
 export class AuthService {

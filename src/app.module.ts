@@ -11,6 +11,9 @@ import { typeOrmConfig } from './config/typeorm.config';
 import { EmailService } from './email/email.service';
 import { EmailModule } from './email/email.module';
 import { ProjectsModule } from './projects/projects.module';
+import { ConversationsModule } from './conversations/conversations.module';
+import { LatexModule } from './latex/latex.module';
+import { AiAgentModule } from './ai-agent/ai-agent.module';
 
 @Module({
   imports: [
@@ -29,6 +32,9 @@ import { ProjectsModule } from './projects/projects.module';
     }),
     EmailModule,
     ProjectsModule,
+    ConversationsModule,
+    LatexModule,
+    AiAgentModule,
   ],
   controllers: [AppController],
   providers: [
