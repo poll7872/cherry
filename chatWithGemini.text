@@ -1,0 +1,98 @@
+Gemini ha dicho
+Hola, soy Cherry, ¿en qué puedo ayudarte hoy?
+
+Es un placer saludarte. Como tu asistente de escritura científica, estoy lista para guiarte en el proceso de estructurar y redactar tu artículo bajo los estándares de la IEEE. Mi objetivo es que nos enfoquemos en la claridad técnica, el rigor académico y, por supuesto, la correcta implementación en LaTeX utilizando la clase IEEEtran.
+
+Para comenzar con nuestra simulación, he preparado el esqueleto básico de tu archivo. A medida que me proporciones la información, iremos completando cada sección.
+
+Aquí tienes el punto de partida:
+
+Fragmento de código
+\documentclass[conference]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+
+\begin{document}
+
+\title{Título del Paper}
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Autor}
+\IEEEauthorblockA{\textit{Departamento} \\
+\textit{Organización}\\
+Ciudad, País \\
+email@ejemplo.com}
+}
+
+\maketitle
+
+\begin{abstract}
+(Esperando contenido...)
+\end{abstract}
+
+\begin{IEEEkeywords}
+Palabras clave, IEEE, Formato.
+\end{IEEEkeywords}
+
+\section{Introducción}
+(Esperando contenido...)
+
+\end{document}
+Para dar el primer paso en firme: ¿Cuál es el título tentativo de tu investigación y cuál es el problema principal que buscas resolver?
+
+Has dicho
+Vamos a escribir un paper sobre la relación y temperatura y presión. Buscamos conocer cual es su relación creame un titulo cool
+
+Gemini ha dicho
+¡Excelente tema! Para un artículo con rigor científico pero que mantenga un impacto visual y conceptual, el título debe ser preciso pero sugerente. Aquí tienes algunas propuestas "cool" que mantienen el estándar de la IEEE:
+
+"Análisis de la Dinámica Correlativa entre Presión y Temperatura en Sistemas Cerrados"
+
+"Caracterización de la Interdependencia Termobarométrica: Un Enfoque Experimental"
+
+"Evaluación del Comportamiento Proporcional: Sinergia entre Presión y Temperatura"
+
+Si te parece bien, podemos usar el segundo, que suena muy profesional. He actualizado nuestro archivo de LaTeX con la estructura para los autores y el título seleccionado:
+
+Fragmento de código
+\title{Caracterización de la Interdependencia Termobarométrica: Un Enfoque Experimental}
+
+\author{\IEEEauthorblockN{1\textsuperscript{st} Autor}
+\IEEEauthorblockA{\textit{Departamento de Ingeniería} \\
+\textit{Universidad del Usuario}\\
+Ciudad, País \\
+correo@ejemplo.com}
+}
+
+\maketitle
+
+\begin{abstract}
+Este artículo investiga la relación fundamental entre la temperatura y la presión. A través de un diseño experimental controlado, se busca cuantificar cómo las variaciones térmicas afectan el estado de presión en un volumen constante, validando así los principios de la termodinámica clásica aplicados a entornos modernos.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Termodinámica, presión, temperatura, ley de Gay-Lussac, correlación de variables.
+\end{IEEEkeywords}
+Para avanzar con la Introducción, necesito definir el contexto: ¿Te gustaría enfocar este estudio en un escenario teórico (como la ley de los gases ideales) o en una aplicación práctica específica (por ejemplo, motores, cámaras de vacío o procesos industriales)?
+
+Has dicho
+Perfecto es el ideal, aquí yo te paso más contexto del proyecto y tu haces la introducción
+
+Gemini ha dicho
+¡Excelente! Quedo a la espera de ese contexto. Para que la Introducción tenga el impacto necesario en un paper de la IEEE, recuerda que solemos seguir una estructura de "embudo":
+
+Contexto General: La importancia de la termodinámica en la ciencia actual.
+
+El Problema: Qué vacío de conocimiento o duda específica estamos abordando (en este caso, la relación P-T).
+
+Justificación: Por qué es relevante estudiar esto hoy en día.
+
+Objetivo: Qué pretendemos demostrar con este paper.
+
+Mientras me pasas los detalles, voy preparando el bloque de la introducción en nuestro código.
+
+Adelante, cuéntame: ¿Qué experimentos hiciste, qué herramientas usaste o en qué entorno específico se basa tu estudio?
