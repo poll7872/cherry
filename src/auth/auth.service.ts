@@ -18,7 +18,7 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
-  async register(email: string, password: string) {
+  async register(name: string, email: string, password: string) {
     const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
       throw new ConflictException('Email already registered');
@@ -28,13 +28,14 @@ export class AuthService {
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const user = await this.usersService.create({
+      name,
       email,
       password: hashed,
       emailVerificationToken: verificationToken,
       emailVerificationExpires: new Date(Date.now() + 1000 * 60 * 60), //1H
     });
 
-    const link = `http://localhost:3000/verify-email?token=${verificationToken}`;
+    const link = `http://localhost:3001/verify-email?token=${verificationToken}`;
     await this.emailService.sendVerificationEmail(user.email, link);
 
     return {
@@ -92,7 +93,7 @@ export class AuthService {
     await this.usersService.save(user);
 
     //Aqui luego enviaremos un email con Resend
-    const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+    const resetLink = `http://localhost:3001/reset-password?token=${token}`;
     await this.emailService.sendPasswordResetEmail(user.email, resetLink);
     return {
       message: 'If the email exists, a reset link was sent',
