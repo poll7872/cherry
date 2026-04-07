@@ -35,7 +35,7 @@ export class AuthService {
       emailVerificationExpires: new Date(Date.now() + 1000 * 60 * 60), //1H
     });
 
-    const link = `http://localhost:3001/verify-email?token=${verificationToken}`;
+    const link = `http://localhost:3001/auth/verify-email?token=${verificationToken}`;
     await this.emailService.sendVerificationEmail(user.email, link);
 
     return {
@@ -93,7 +93,7 @@ export class AuthService {
     await this.usersService.save(user);
 
     //Aqui luego enviaremos un email con Resend
-    const resetLink = `http://localhost:3001/reset-password?token=${token}`;
+    const resetLink = `http://localhost:3001/auth/reset-password?token=${token}`;
     await this.emailService.sendPasswordResetEmail(user.email, resetLink);
     return {
       message: 'If the email exists, a reset link was sent',
