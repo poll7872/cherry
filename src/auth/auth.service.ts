@@ -54,6 +54,7 @@ export class AuthService {
     user.emailVerificationExpires = null;
 
     await this.usersService.save(user);
+    return { message: 'Email verified successfully' };
   }
 
   async login(email: string, password: string) {
