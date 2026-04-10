@@ -17,27 +17,27 @@ import {
 
 export function DashboardHeader() {
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-md supports-backdrop-filter:bg-background/60 transition-all duration-300">
-      <div className="flex h-16 items-center justify-between px-8">
+    <header className="sticky top-0 z-40 w-full bg-background/60 backdrop-blur-xl supports-backdrop-filter:bg-background/40 transition-all duration-300">
+      <div className="flex h-20 items-center justify-between px-10">
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground font-medium">
-            <span>Dashboard</span>
-            <span className="opacity-40">/</span>
-            <span className="text-foreground">Mis Proyectos</span>
+          <div className="hidden md:flex items-center gap-3 text-sm font-semibold tracking-wide lowercase">
+            <span className="text-secondary/50">Dashboard</span>
+            <span className="text-secondary/20 font-light">/</span>
+            <span className="text-primary">Mis Proyectos</span>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="relative h-9 w-9 rounded-full outline-none ring-offset-background transition-all hover:ring-2 hover:ring-primary/20">
-                <Avatar className="h-9 w-9 border border-border/50">
+              <button className="relative h-10 w-10 rounded-2xl outline-none transition-all hover:scale-105 active:scale-95 group">
+                <Avatar className="h-10 w-10 shadow-sm transition-shadow group-hover:shadow-md">
                   <AvatarImage src="" alt="User" />
-                  <AvatarFallback className="bg-primary/5 text-primary font-bold">JD</AvatarFallback>
+                  <AvatarFallback className="bg-primary/5 text-primary font-black uppercase tracking-tighter">JD</AvatarFallback>
                 </Avatar>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 mt-2" align="end" forceMount>
+            <DropdownMenuContent className="w-64 mt-4 rounded-2xl border-none shadow-2xl p-2" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-bold leading-none">John Doe</p>
