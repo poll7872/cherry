@@ -1,38 +1,11 @@
 import { ProjectCard } from "@/components/dashboard/project-card";
 import { CreateProjectDialog } from "@/components/dashboard/create-project-dialog";
-import { Project } from "@/lib/types";
 import { Plus } from "lucide-react";
+import { getProjects } from "@/actions/projects";
 
-// Mock data for initial view
-const MOCK_PROJECTS: Project[] = [
-  {
-    id: "1",
-    name: "Investigación Cuántica",
-    description: "Estudio sobre entrelazamiento cuántico y computación.",
-    userId: "user-1",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    name: "Tesis de Grado",
-    description: "Desarrollo de sistemas distribuidos con Go y Rust.",
-    userId: "user-1",
-    createdAt: new Date(Date.now() - 86400000).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000).toISOString(),
-  },
-  {
-    id: "3",
-    name: "Paper IEEE - Redes 5G",
-    description: "Análisis de latencia en redes móviles de quinta generación.",
-    userId: "user-1",
-    createdAt: new Date(Date.now() - 172800000).toISOString(),
-    updatedAt: new Date(Date.now() - 172800000).toISOString(),
-  },
-];
-
-export default function DashboardPage() {
-  const hasProjects = MOCK_PROJECTS.length > 0;
+export default async function DashboardPage() {
+  const projects = await getProjects();
+  const hasProjects = projects.length > 0;
 
   return (
     <div className="p-8 md:p-12">
@@ -50,7 +23,7 @@ export default function DashboardPage() {
 
       {hasProjects ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
-          {MOCK_PROJECTS.map((project) => (
+          {projects.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
         </div>
