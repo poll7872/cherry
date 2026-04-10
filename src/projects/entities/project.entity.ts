@@ -25,6 +25,9 @@ export class Project {
   @Column({ type: 'text', nullable: true, select: false })
   compiledPdfBase64: string;
 
+  @Column({ nullable: true })
+  sandboxId: string;
+
   @ManyToOne(() => User, (user) => user.projects, {
     onDelete: 'CASCADE',
     eager: false,

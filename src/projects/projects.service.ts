@@ -10,6 +10,7 @@ import { Project } from './entities/project.entity';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { LaTeXDocument } from 'src/latex/entities/latex-document.entity';
+import { DaytonaSandboxService } from 'src/ai-agent/daytona-sandbox.service';
 
 const MAIN_TEX_TEMPLATE = String.raw`\documentclass[journal]{IEEEtran}
 \usepackage[spanish]{babel}
@@ -58,6 +59,7 @@ export class ProjectsService {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(LaTeXDocument)
     private readonly latexRepository: Repository<LaTeXDocument>,
+    private readonly daytonaSandboxService: DaytonaSandboxService,
   ) {}
 
   async create(createProjectDto: CreateProjectDto, user: User) {
@@ -128,6 +130,8 @@ export class ProjectsService {
 
   async remove(id: string, user: User) {
     const project = await this.findOne(id, user);
+    // Delete the Daytona sandbox if it exists
+    await this.daytonaSandboxService.deleteSandbox(project.id);
     return this.projectRepository.remove(project);
   }
 }
