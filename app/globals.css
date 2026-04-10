@@ -45,6 +45,7 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --shadow-premium: 0 20px 25px -5px rgb(0 0 0 / 0.02), 0 8px 10px -6px rgb(0 0 0 / 0.02);
 
   --color-primary: #D2042D;
   --color-secondary: #777777;
@@ -52,7 +53,7 @@
 }
 
 :root {
-  --background: #ffffff;
+  --background: #F8FAFC;
   --foreground: #111827;
   --card: #ffffff;
   --card-foreground: #111827;
@@ -63,14 +64,14 @@
   --secondary: #777777;
   --secondary-foreground: #ffffff;
   --muted: #E5E5E5;
-  --muted-foreground: #4B5563;
+  --muted-foreground: #64748B;
   --accent: #fce7eb;
   --accent-foreground: #D2042D;
   --destructive: #ef4444;
   --border: #E5E5E5;
   --input: #E5E5E5;
   --ring: #D2042D;
-  --radius: 0.75rem;
+  --radius: 1rem;
 }
 
 .container {
@@ -122,4 +123,49 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Custom Markdown Styles */
+.prose-cherry {
+  @apply text-[#1F2937] leading-relaxed wrap-break-word max-w-full overflow-hidden;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.prose-cherry p {
+  @apply mb-4 last:mb-0;
+}
+
+.prose-cherry strong {
+  @apply font-bold text-[#111827];
+}
+
+.prose-cherry ul {
+  @apply list-disc pl-6 mb-4 space-y-2;
+}
+
+.prose-cherry ol {
+  @apply list-decimal pl-6 mb-4 space-y-2;
+}
+
+.prose-cherry h1, 
+.prose-cherry h2, 
+.prose-cherry h3 {
+  @apply font-black text-[#111827] mt-6 mb-3;
+}
+
+.prose-cherry h1 { @apply text-2xl; }
+.prose-cherry h2 { @apply text-xl; }
+.prose-cherry h3 { @apply text-lg; }
+
+.prose-cherry code {
+  @apply bg-primary/5 text-primary px-1.5 py-0.5 rounded-md font-mono text-[0.9em] font-medium;
+}
+
+.prose-cherry pre {
+  @apply bg-[#111827] text-white p-6 rounded-2xl font-mono text-sm overflow-x-auto my-6 shadow-xl max-w-full;
+}
+
+.prose-cherry pre code {
+  @apply bg-transparent text-white p-0 rounded-none font-normal;
 }
