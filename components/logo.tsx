@@ -7,7 +7,7 @@ export function Logo() {
       alt="Cherry"
       width={20}
       height={20}
-      className="w-36 h-auto"
+      className="w-32 h-auto"
       priority
     />
   );
