@@ -29,13 +29,14 @@ export function DashboardSidebar() {
   return (
     <aside 
       className={cn(
-        "relative h-screen border-r bg-background transition-all duration-300 ease-in-out flex flex-col",
+        "relative h-screen bg-card transition-all duration-300 ease-in-out flex flex-col z-50",
+        "shadow-[10px_0_30px_-15px_rgba(0,0,0,0.05)]",
         collapsed ? "w-20" : "w-64"
       )}
     >
-      <div className="flex h-16 items-center px-6 border-b">
+      <div className="flex h-20 items-center px-6">
         <Link href="/dashboard" className="flex items-center gap-2 overflow-hidden">
-          <div className="min-w-[40px]">
+          <div className="min-w-[40px] transition-transform hover:scale-110 duration-300">
             <Logo /> 
           </div>
         </Link>
@@ -66,12 +67,12 @@ export function DashboardSidebar() {
         })}
       </div>
 
-      <div className="p-4 border-t space-y-4">
+      <div className="p-4 mt-auto space-y-4">
         <div className={cn(
-          "flex items-center gap-3 p-2 rounded-xl border bg-muted/30",
-          collapsed ? "justify-center" : "px-3"
+          "flex items-center gap-3 p-3 rounded-2xl bg-muted/30 transition-colors hover:bg-muted/50",
+          collapsed ? "justify-center" : "px-4"
         )}>
-          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+          <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black shadow-sm">
             JD
           </div>
           {!collapsed && (
