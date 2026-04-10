@@ -212,7 +212,7 @@ export class AiAgentService implements OnModuleInit {
         }
 
         const result = await this.daytonaService.compileLatex(
-          conversationId,
+          projectId,
           docs,
           filename,
         );
