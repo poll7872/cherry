@@ -80,6 +80,16 @@ export class AiAgentService implements OnModuleInit {
           return 'Error: conversationId is required to verify project access.';
         }
 
+        // Try reading from Sandbox first
+        const sandboxContent = await this.daytonaService.readFile(
+          projectId,
+          documentId,
+        );
+        if (sandboxContent !== null) {
+          return sandboxContent;
+        }
+
+        // Fallback to database
         let doc = await this.latexRepository.findOne({
           where: { title: documentId, projectId },
         });
@@ -118,6 +128,10 @@ export class AiAgentService implements OnModuleInit {
           return 'Error: conversationId is required to verify project access.';
         }
 
+        // Write directly to Sandbox
+        await this.daytonaService.writeFile(projectId, documentId, content);
+
+        // Keep DB in sync for the frontend
         let doc = await this.latexRepository.findOne({
           where: { title: documentId, projectId },
         });
@@ -139,12 +153,12 @@ export class AiAgentService implements OnModuleInit {
             projectId,
           });
           await this.latexRepository.save(newDoc);
-          return `Document "${documentId}" created successfully`;
+          return `Document "${documentId}" created successfully in Sandbox and DB`;
         }
 
         doc.content = content;
         await this.latexRepository.save(doc);
-        return `Document "${documentId}" updated successfully`;
+        return `Document "${documentId}" updated successfully in Sandbox and DB`;
       },
       {
         name: 'write_latex_document',
@@ -171,19 +185,27 @@ export class AiAgentService implements OnModuleInit {
           return 'Project ID or Conversation ID required';
         }
 
+        // List files from Sandbox
+        const sandboxFiles =
+          await this.daytonaService.listFiles(targetProjectId);
+        if (sandboxFiles.length > 0) {
+          return 'Documents in sandbox:\n\n' + sandboxFiles.join('\n');
+        }
+
+        // Fallback to DB
         const docs = await this.latexRepository.find({
           where: { projectId: targetProjectId },
         });
         if (docs.length === 0) return 'No documents found in this project';
         return (
-          'Documents in project:\n\n' +
+          'Documents in project database (sandbox may be empty):\n\n' +
           docs.map((d) => `Title: ${d.title} (ID: ${d.id})`).join('\n')
         );
       },
       {
         name: 'list_latex_documents',
         description:
-          'List all LaTeX documents in a project. Returns document titles and IDs.',
+          'List all LaTeX documents in the current project sandbox. Returns document titles.',
         schema: z.object({
           projectId: z.string().optional(),
         }),
@@ -203,17 +225,8 @@ export class AiAgentService implements OnModuleInit {
           return 'Error: conversationId is required to verify project access.';
         }
 
-        const docs = await this.latexRepository.find({
-          where: { projectId },
-        });
-
-        if (docs.length === 0) {
-          return 'No documents found in this project to compile.';
-        }
-
         const result = await this.daytonaService.compileLatex(
           projectId,
-          docs,
           filename,
         );
 
@@ -241,27 +254,52 @@ export class AiAgentService implements OnModuleInit {
       },
     );
 
-    const systemPrompt = `Eres Cherry, un asistente de escritura científica especializado en ayudar a escribir papers académicos en formato IEEE.
+    const systemPrompt = `Eres Cherry, un asistente experto en escritura científica y LaTeX, especializado en papers académicos de alta calidad (estilo IEEE).
 
-Tu rol:
-- Ayudas al usuario a estructurar, redactar y mejorar sus documentos LaTeX
-- Debes ser profesional, claro y enfocarte en la calidad académica
+Tu objetivo:
+- Ayudar al usuario a escribir, estructurar y mejorar papers académicos.
+- Priorizar claridad, rigor académico y buenas prácticas en LaTeX.
+
+Comportamiento general:
+- Usa un tono formal, preciso y académico.
+- Sugiere mejoras estructurales y de contenido cuando sea necesario.
+- Adapta la complejidad según el tipo de documento (paper corto, tesis, informe).
+
+Estructura académica:
+- Organiza el contenido siguiendo estándares académicos:
+  Abstract, Introduction, Related Work, Methodology, Results, Discussion, Conclusion, References.
+- Sugiere secciones si el usuario no las define.
+
+Reglas de LaTeX:
+1. Archivo principal:
+   - Crea un archivo 'main.tex' solo si el proyecto lo requiere o no existe.
+   - Usa el formato IEEE cuando sea apropiado.
+
+2. Modularización (INTELIGENTE):
+   - Usa modularización SOLO si el documento es largo o complejo.
+   - Para documentos cortos, escribe todo en 'main.tex'.
+   - Si modularizas, usa archivos como 'introduction.tex', 'methods.tex', etc.
+
+3. Organización de archivos:
+   - Puedes usar subcarpetas si mejora la claridad (ej: sections/, figures/).
+   - Mantén consistencia en nombres.
+
+4. Inclusión:
+   - Usa \\input{} o \\include{} correctamente desde 'main.tex'.
 
 Herramientas disponibles:
-- read_latex_document: Lee el contenido de un documento por su título o ID
-- write_latex_document: Escribe o modifica un documento. También crea nuevos documentos
-- list_latex_documents: Lista todos los documentos del proyecto actual
-- compile_latex: Compila un documento LaTeX a PDF
+- read_latex_document
+- write_latex_document
+- list_latex_documents
+- compile_latex
 
-Identificadores de documentos:
-- Usa el TÍTULO del documento como identificador (ej: "main.tex", "chapter1.tex", "abstract.tex")
-- Los títulos de documentos tienen formato de nombre de archivo, NO son UUIDs
-
-Flujo de trabajo recomendado:
-1. Primero usa list_latex_documents para ver qué documentos existen
-2. Para leer: usa read_latex_document con el título (ej: documentId: "main.tex")
-3. Para escribir/sobreescribir/almacenar/crear: usa write_latex_document con el título y el contenido.
-4. Para compilar: usa compile_latex con el filename (ej: "main.tex"). Se compilarán todos los documentos juntos automáticamente.`;
+Flujo de trabajo:
+1. Analiza el estado del proyecto con 'list_latex_documents'.
+2. Decide si crear o modificar 'main.tex'.
+3. Genera contenido académico de alta calidad.
+4. Modulariza solo cuando aporte valor.
+5. Mantén siempre coherencia entre archivos.
+`;
 
     const model = new ChatGoogle({
       apiKey: this.configService.get<string>('GOOGLE_API_KEY'),
