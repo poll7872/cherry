@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Daytona, Sandbox } from '@daytonaio/sdk';
-import { LaTeXDocument } from 'src/latex/entities/latex-document.entity';
 import { Project } from 'src/projects/entities/project.entity';
 
 @Injectable()
@@ -78,18 +77,10 @@ export class DaytonaSandboxService implements OnModuleInit {
 
   async compileLatex(
     projectId: string,
-    documents: LaTeXDocument[],
     filename: string = 'main.tex',
   ): Promise<{ success: boolean; output: string; pdfBase64?: string }> {
     try {
       const sandbox = await this.getSandboxForProject(projectId);
-
-      const filesToUpload = documents.map((doc) => ({
-        source: Buffer.from(doc.content),
-        destination: doc.title,
-      }));
-
-      await sandbox.fs.uploadFiles(filesToUpload);
 
       const result = await sandbox.process.executeCommand(
         `latexmk -pdf -interaction=nonstopmode ${filename}`,
@@ -131,6 +122,35 @@ export class DaytonaSandboxService implements OnModuleInit {
         output: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         exitCode: 1,
       };
+    }
+  }
+
+  async readFile(projectId: string, path: string): Promise<string | null> {
+    try {
+      const sandbox = await this.getSandboxForProject(projectId);
+      const buffer = await sandbox.fs.downloadFile(path);
+      return Buffer.from(buffer).toString('utf-8');
+    } catch (error) {
+      this.logger.warn(
+        `File ${path} not found in sandbox for project ${projectId}: ${error}`,
+      );
+      return null;
+    }
+  }
+
+  async writeFile(
+    projectId: string,
+    path: string,
+    content: string,
+  ): Promise<void> {
+    try {
+      const sandbox = await this.getSandboxForProject(projectId);
+      await sandbox.fs.uploadFile(Buffer.from(content), path);
+    } catch (error) {
+      this.logger.error(
+        `Error writing file ${path} in sandbox for project ${projectId}: ${error}`,
+      );
+      throw error;
     }
   }
 
@@ -185,6 +205,21 @@ export class DaytonaSandboxService implements OnModuleInit {
           `Sandbox ${project.sandboxId} could not be deleted (may already be gone): ${err}`,
         );
       }
+    }
+  }
+
+  async listFiles(projectId: string): Promise<string[]> {
+    try {
+      const sandbox = await this.getSandboxForProject(projectId);
+      const filesInfo = await sandbox.fs.listFiles('.');
+      return filesInfo
+        .filter((f) => f.name.endsWith('.tex'))
+        .map((f) => f.name);
+    } catch (error) {
+      this.logger.error(
+        `Error listing files in sandbox for project ${projectId}: ${error}`,
+      );
+      return [];
     }
   }
 }
