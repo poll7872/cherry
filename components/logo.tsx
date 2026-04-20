@@ -1,13 +1,18 @@
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
-export function Logo() {
+interface LogoProps {
+  className?: string;
+}
+
+export function Logo({ className }: LogoProps) {
   return (
     <Image
       src="/logo_bg_white.svg"
       alt="Cherry"
       width={20}
       height={20}
-      className="w-32 h-auto"
+      className={cn("w-32 h-auto", className)}
       priority
     />
   );

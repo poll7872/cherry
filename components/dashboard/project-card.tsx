@@ -1,6 +1,5 @@
 "use client";
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,7 +8,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FileText, MoreVertical, Pencil, Trash2, Calendar, ArrowRight } from "lucide-react";
+import {
+  FileText,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  Calendar,
+  ArrowRight,
+} from "lucide-react";
 import { Project } from "@/lib/types";
 import { useState } from "react";
 import { EditProjectDialog } from "./edit-project-dialog";
@@ -23,82 +29,97 @@ interface ProjectCardProps {
 export function ProjectCard({ project }: ProjectCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  
-  const formattedDate = new Date(project.createdAt).toLocaleDateString("es-ES", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+
+  const formattedDate = new Date(project.createdAt).toLocaleDateString(
+    "es-ES",
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    },
+  );
 
   return (
-    <Card className="group relative border-none bg-white shadow-sm hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden flex flex-col h-full">
-      {/* Accent bar */}
-      <div className="absolute top-0 left-0 w-1 h-full bg-primary/20 group-hover:bg-primary transition-colors duration-300" />
-        
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3 h-20">
-          <div className="flex items-start gap-4 pr-6">
-            <div className="mt-1 shrink-0 rounded-xl bg-primary/5 p-2 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
-              <FileText className="h-6 w-6" />
-            </div>
-            <CardTitle className="text-lg font-bold tracking-tight text-foreground leading-tight line-clamp-2">
-              {project.name}
-            </CardTitle>
+    <div className="group relative flex flex-col h-full glass-panel transition-all duration-700 hover:border-primary/20 hover:shadow-primary/5 p-1 overflow-hidden">
+      <div className="flex flex-col h-full p-8 gap-8 relative z-10">
+        <div className="flex items-start justify-between">
+          <div className="shrink-0 rounded-2xl bg-white/5 p-3 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-700 border border-white/5 shadow-inner">
+            <FileText className="h-5 w-5" />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-muted rounded-full">
-                <MoreVertical className="h-4 w-4" />
-                <span className="sr-only">Abrir menú</span>
+              <Button
+                variant="ghost"
+                className="h-8 w-8 p-0 hover:bg-white/5 rounded-xl opacity-40 hover:opacity-100 transition-all"
+              >
+                <MoreVertical className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-xl shadow-2xl border-none p-1 min-w-[160px]">
-              <DropdownMenuItem 
+            <DropdownMenuContent
+              align="end"
+              className="rounded-2xl shadow-2xl border border-white/10 p-2 min-w-48 bg-card/95 backdrop-blur-xl"
+            >
+              <DropdownMenuItem
                 onClick={() => setShowEditDialog(true)}
-                className="cursor-pointer gap-2 rounded-lg py-2 focus:bg-primary/5 focus:text-primary transition-colors"
+                className="cursor-pointer gap-3 rounded-xl py-2.5 focus:bg-primary/10 focus:text-primary transition-colors text-xs font-bold uppercase tracking-wider"
               >
-                <Pencil className="h-4 w-4" />
-                <span className="font-semibold">Editar</span>
+                <Pencil className="h-3.5 w-3.5" />
+                <span>Editar</span>
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => setShowDeleteDialog(true)}
-                className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer gap-2 rounded-lg py-2 transition-colors"
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer gap-3 rounded-xl py-2.5 transition-colors text-xs font-bold uppercase tracking-wider"
               >
-                <Trash2 className="h-4 w-4" />
-                <span className="font-semibold">Eliminar</span>
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Eliminar</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </CardHeader>
-
-      <CardContent className="grow pt-0 pb-6">
-        <p className="text-sm font-medium text-[#4B5563] leading-relaxed line-clamp-3">
-          {project.description || "Sin descripción adicional proporcionada para este proyecto."}
-        </p>
-      </CardContent>
-
-      <CardFooter className="flex flex-col gap-4 border-t border-muted/50 pt-4 bg-muted/5">
-        <div className="flex items-center justify-between w-full text-[12px]">
-          <div className="flex items-center gap-1.5 text-[#6B7280] font-semibold">
-            <Calendar className="h-3.5 w-3.5" />
-            <span>{formattedDate}</span>
-          </div>
-          <Badge variant="secondary" className="bg-neutral text-primary font-bold px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider">
-            LaTeX
-          </Badge>
         </div>
-        
-        <Button asChild className="w-full bg-primary/5 text-primary hover:bg-primary hover:text-white border-none shadow-none group/btn transition-all duration-300 rounded-xl font-bold py-5">
-          <Link href={`/dashboard/projects/${project.id}`}>
-            Continuar Editando
-            <ArrowRight className="ml-2 h-4 w-4 transform group-hover/btn:translate-x-1 transition-transform" />
-          </Link>
-        </Button>
-      </CardFooter>
 
-      <EditProjectDialog 
-        project={project} 
-        open={showEditDialog} 
-        onOpenChange={setShowEditDialog} 
+        <div className="space-y-4">
+          <h3 className="text-2xl font-black text-white tracking-tighter leading-[1.1] line-clamp-2">
+            {project.name}
+          </h3>
+          <p className="text-xs font-sans text-muted-foreground/60 leading-relaxed line-clamp-2 italic">
+            {project.description || "Sin descripción adicional registrada."}
+          </p>
+        </div>
+
+        <div className="mt-auto pt-6 flex flex-col gap-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[9px] font-mono tracking-widest text-muted-foreground/40 font-bold uppercase">
+              <Calendar className="h-3 w-3" />
+              <span>{formattedDate}</span>
+            </div>
+            <Badge
+              variant="secondary"
+              className="bg-white/5 text-primary border border-white/5 font-mono px-3 py-1 rounded-lg text-[9px] uppercase tracking-tighter"
+            >
+              PROYECTO
+            </Badge>
+          </div>
+
+          <Button
+            asChild
+            className="w-full h-11 bg-primary text-white hover:bg-primary/90 hover:shadow-xl active:scale-[0.98] transition-all rounded-xl text-[11px] font-black uppercase tracking-[0.2em]" 
+          >
+            <Link href={`/dashboard/projects/${project.id}`}>
+              Abrir
+              <ArrowRight className="ml-2 h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        </div>
+      </div>
+      
+      {/* Decorative hover light */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[60px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
+      <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-primary/5 blur-[50px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000 z-0 pointer-events-none" />
+
+      <EditProjectDialog
+        project={project}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
       />
 
       <DeleteProjectDialog
@@ -106,6 +127,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
       />
-    </Card>
+    </div>
   );
 }

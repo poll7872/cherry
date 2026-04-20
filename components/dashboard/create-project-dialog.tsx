@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, BookOpen } from "lucide-react";
 import { createProject } from "@/actions/projects";
 import { sileo } from "sileo";
 
@@ -25,21 +25,28 @@ export function CreateProjectDialog() {
     if (!state) return;
 
     if (state.errors && state.errors.length > 0) {
-      state.errors.forEach((error) => sileo.error({
-        title: "Error",
-        description: error,
-        styles: { description: "text-black" }
-      }));
+      state.errors.forEach((error) =>
+        sileo.error({
+          title: "Error",
+          description: error,
+          styles: { 
+            description: "text-foreground font-sans text-sm",
+            title: "font-sans font-bold text-lg"
+          },
+        }),
+      );
     }
 
     if (state.success) {
       sileo.success({
-        title: "Éxito",
-        description: state.success,
-        styles: { description: "text-black" }
+        title: "Proyecto iniciado",
+        description: "El nuevo entorno de investigación ha sido creado exitosamente.",
+        styles: { 
+          description: "text-foreground font-sans text-sm",
+          title: "font-sans font-bold text-lg text-primary"
+        },
       });
-      
-      // Evitar renderizado en cascada posponiendo el cierre al siguiente frame
+
       requestAnimationFrame(() => {
         setOpen(false);
       });
@@ -49,69 +56,82 @@ export function CreateProjectDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 rounded-2xl px-6 h-12 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all font-bold">
-          <Plus className="h-5 w-5" />
+        <Button className="gap-2 rounded-xl px-8 h-12 shadow-xl hover:shadow-primary/20 active:scale-[0.98] transition-all font-black uppercase tracking-wider bg-primary text-white border-none">
+          <Plus className="h-4 w-4" />
           Nuevo Proyecto
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] rounded-3xl backdrop-blur-lg bg-background/95 border-none shadow-2xl p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[500px] rounded-[2.5rem]! glass-panel p-0 overflow-hidden border-white/5 shadow-2xl">
         <form action={action}>
-          <div className="p-8 pb-0">
-            <DialogHeader className="space-y-3">
-              <DialogTitle className="text-3xl font-black tracking-tight">Crear Proyecto</DialogTitle>
-              <DialogDescription className="text-secondary font-medium leading-relaxed">
-                Comienza un nuevo documento LaTeX. Se creará una plantilla IEEE por defecto.
+          <div className="p-10 pb-4 text-center space-y-8">
+            <div className="mx-auto w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center text-primary mb-2 shadow-inner border border-white/5">
+              <BookOpen className="h-7 w-7" />
+            </div>
+            <DialogHeader className="space-y-4">
+              <DialogTitle className="text-3xl font-black text-white tracking-tight leading-tight italic">
+                Nuevo proyecto
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground/60 font-sans leading-relaxed text-sm">
+                Configuraremos un entorno LaTeX automatizado y optimizado para tu próxima producción científica.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-6 py-8">
-              <FieldGroup className="space-y-6">
+            <div className="grid gap-8 py-4">
+              <FieldGroup className="space-y-6 text-left">
                 <Field>
-                  <FieldLabel htmlFor="name" className="text-xs font-black text-foreground uppercase tracking-widest pl-1">
-                    Nombre del proyecto
+                  <FieldLabel
+                    htmlFor="name"
+                    className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 flex items-center gap-2"
+                  >
+                    <span className="w-1 h-1 bg-primary rounded-full" />
+                    Título del proyecto
                   </FieldLabel>
                   <Input
                     id="name"
                     name="name"
-                    placeholder="Mi Investigación Científica"
+                    placeholder="ej. Análisis de Sistemas Complejos"
                     required
                     disabled={isPending}
-                    className="rounded-2xl border-muted bg-muted/30 focus:bg-white focus:ring-primary/20 h-14 px-5 font-medium transition-all"
+                    className="h-14 bg-white/3 border-white/10 focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:opacity-30 px-6 mt-2"
                   />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="description" className="text-xs font-black text-foreground uppercase tracking-widest pl-1">
-                    Descripción (opcional)
+                  <FieldLabel
+                    htmlFor="description"
+                    className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1 flex items-center gap-2"
+                  >
+                    <span className="w-1 h-1 bg-primary rounded-full" />
+                    Descripción resumida
                   </FieldLabel>
                   <Input
                     id="description"
                     name="description"
-                    placeholder="Breve descripción de tu trabajo..."
+                    placeholder="Describe brevemente el alcance del paper..."
                     disabled={isPending}
-                    className="rounded-2xl border-muted bg-muted/30 focus:bg-white focus:ring-primary/20 h-14 px-5 font-medium transition-all"
+                    className="h-14 bg-white/3 border-white/10 focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:opacity-30 px-6 mt-2"
                   />
                 </Field>
               </FieldGroup>
             </div>
           </div>
-          <DialogFooter className="flex gap-4 p-8 bg-muted/30 mt-4">
-            <Button 
+          <DialogFooter className="flex flex-col sm:flex-row gap-4 p-10 bg-white/2 border-t border-white/5">
+            <Button
               type="button"
-              variant="ghost" 
+              variant="ghost"
               disabled={isPending}
-              onClick={() => setOpen(false)} 
-              className="rounded-2xl flex-1 font-bold h-12 hover:bg-white transition-colors"
+              onClick={() => setOpen(false)}
+              className="rounded-xl flex-1 font-bold h-12 hover:bg-white/5 text-muted-foreground hover:text-white transition-all text-xs uppercase tracking-widest"
             >
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isPending}
-              className="rounded-2xl flex-2 h-12 font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95 transition-all"
+              className="rounded-xl flex-1 h-12 font-black shadow-lg shadow-primary/20 active:scale-[0.98] transition-all bg-primary text-white text-xs uppercase tracking-widest"
             >
               {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creando...
+                  Procesando...
                 </>
               ) : (
                 "Crear Proyecto"

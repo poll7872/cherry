@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useActionState, useEffect } from "react"
 import { sileo } from "sileo"
@@ -6,19 +6,13 @@ import { signup } from "@/actions/auth"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
   Field,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
+import { Logo } from "@/components/logo"
 
 export function SignupForm({
   className,
@@ -32,98 +26,128 @@ export function SignupForm({
     if (state.errors && state.errors.length > 0) {
       state.errors.forEach((error) =>
         sileo.error({
-          title: "Algo salió mal!",
+          title: "Error de registro",
           description: error,
-          styles: { description: "text-black" },
+          styles: { 
+            description: "text-foreground font-sans text-sm",
+            title: "font-sans font-bold text-lg"
+          },
         }),
       );
     }
 
     if (state.success) {
       sileo.success({
-        title: "Guardado",
+        title: "Cuenta creada",
         description: state.success,
-        styles: { description: "text-black" },
+        styles: { 
+          description: "text-foreground font-sans text-sm",
+          title: "font-sans font-bold text-lg text-primary"
+        },
       });
     }
   }, [state])
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Crear cuenta</CardTitle>
-          <CardDescription>
-            Ingresa tu correo para crear tu cuenta
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={action}>
-            <FieldGroup>
+    <div className={cn("flex flex-col gap-10 w-full", className)} {...props}>
+      <div className="flex flex-col items-start gap-6">
+        <Logo />
+        <div className="space-y-3">
+          <h1 className="text-5xl font-black text-white tracking-tighter leading-none">
+            Únete a <span className="text-primary italic">Cherry</span>
+          </h1>
+          <p className="text-sm text-muted-foreground font-sans max-w-[340px] leading-relaxed">
+            Comienza a potenciar tu producción científica con herramientas de precisión.
+          </p>
+        </div>
+      </div>
+
+      <div className="glass-panel p-8 md:p-10 relative overflow-hidden group rounded-[2.5rem]">
+        <form action={action}>
+          <FieldGroup className="gap-6">
+            <Field>
+              <FieldLabel htmlFor="name" className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                <span className="w-1 h-1 bg-primary rounded-full" />
+                Nombre completo
+              </FieldLabel>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                placeholder="Dr. Isaac Newton"
+                required
+                className="h-14 bg-white/3 border-white/10 focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:opacity-30"
+              />
+            </Field>
+            
+            <Field>
+              <FieldLabel htmlFor="email" className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                <span className="w-1 h-1 bg-primary rounded-full" />
+                Email
+              </FieldLabel>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="newton@universidad.edu"
+                required
+                className="h-14 bg-white/3 border-white/10 focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:opacity-30"
+              />
+            </Field>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field>
-                <FieldLabel htmlFor="name">Nombre completo</FieldLabel>
+                <FieldLabel htmlFor="password" className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                  <span className="w-1 h-1 bg-primary rounded-full" />
+                  Contraseña
+                </FieldLabel>
                 <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Juan Pérez"
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
                   required
+                  className="h-14 bg-white/3 border-white/10 focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:opacity-30"
                 />
               </Field>
               <Field>
-                <FieldLabel htmlFor="email">Correo electrónico</FieldLabel>
+                <FieldLabel htmlFor="confirm-password" className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-2">
+                  <span className="w-1 h-1 bg-primary rounded-full" />
+                  Confirmar
+                </FieldLabel>
                 <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="correo@ejemplo.com"
+                  id="confirm-password"
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
                   required
+                  className="h-14 bg-white/3 border-white/10 focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:opacity-30"
                 />
               </Field>
-              <Field>
-                <Field className="grid grid-cols-2 gap-4">
-                  <Field>
-                    <FieldLabel htmlFor="password">Contraseña</FieldLabel>
-                    <Input
-                      id="password"
-                      name="password"
-                      type="password"
-                      required
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="confirm-password">
-                      Confirmar contraseña
-                    </FieldLabel>
-                    <Input
-                      id="confirm-password"
-                      name="confirmPassword"
-                      type="password"
-                      required
-                    />
-                  </Field>
-                </Field>
-                <p className="text-sm text-muted-foreground">
-                  Debe tener al menos 8 caracteres.
-                </p>
-              </Field>
-              <Field>
-                <Button type="submit" disabled={pending}>
-                  {pending ? "Creando cuenta..." : "Crear cuenta"}
-                </Button>
-                <p className="text-center text-sm text-muted-foreground">
-                  ¿Ya tienes una cuenta?{" "}
-                  <Link href="/auth/login">Inicia sesión</Link>
-                </p>
-              </Field>
-            </FieldGroup>
-          </form>
-        </CardContent>
-      </Card>
-      <p className="px-6 text-center text-sm text-muted-foreground">
-        Al continuar, aceptas nuestros <a href="#">Términos de Servicio</a> y{" "}
-        <a href="#">Política de Privacidad</a>.
-      </p>
+            </div>
+            
+            <Field className="pt-4">
+              <Button 
+                type="submit" 
+                className="w-full h-14 text-sm font-bold tracking-tight transition-all rounded-2xl bg-primary text-white hover:bg-primary/90 hover:shadow-lg active:scale-[0.98]" 
+                disabled={pending}
+              >
+                {pending ? "Preparando entorno..." : "Crear mi cuenta"}
+              </Button>
+            </Field>
+          </FieldGroup>
+        </form>
+      </div>
+
+      <div className="flex flex-col items-start gap-4">
+        <div className="h-px w-12 bg-white/10" />
+        <p className="text-sm text-muted-foreground font-sans">
+          ¿Ya eres usuario?{" "}
+          <Link href="/auth/login" className="text-white font-bold hover:text-primary transition-all underline decoration-primary/40 underline-offset-4">
+            Inicia sesión aquí
+          </Link>
+        </p>
+      </div>
     </div>
   )
 }

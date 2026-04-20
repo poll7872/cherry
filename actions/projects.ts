@@ -169,3 +169,31 @@ export async function deleteProject(projectId: string) {
     return { errors: ["Error de conexión. Intenta de nuevo más tarde."], success: "" };
   }
 }
+
+export async function getProject(projectId: string): Promise<Project | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_SESSION_NAME)?.value;
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/projects/${projectId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      next: { tags: [`project-${projectId}`] },
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Error fetching project ${projectId}:`, error);
+    return null;
+  }
+}

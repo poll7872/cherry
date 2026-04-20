@@ -1,17 +1,22 @@
 "use client"
 
 import { SignupForm } from "@/components/auth/signup-form"
-import { Logo } from "@/components/logo"
 
 export default function SignupPage() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
-      <div className="flex w-full max-w-sm flex-col gap-6">
-        <a href="#" className="flex items-center justify-center self-center">
-          <Logo />
-        </a>
+    <main className="relative z-10 flex-1 flex flex-col items-center justify-center p-6 md:p-10 animate-slide-up">
+      <div className="w-full max-w-[440px]">
         <SignupForm />
       </div>
-    </div>
+      
+      <footer className="absolute bottom-10 right-1/2 translate-x-1/2 md:right-10 md:translate-x-0">
+        <div className="flex items-center gap-3">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-[0.3em] font-bold">
+            Unirse a la Vanguardia Científica
+          </p>
+          <div className="h-px w-6 bg-primary/30" />
+        </div>
+      </footer>
+    </main>
   )
 }

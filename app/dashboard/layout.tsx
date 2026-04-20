@@ -1,7 +1,6 @@
 "use client";
 
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
-import { DashboardHeader } from "@/components/dashboard/dashboard-header";
+import { DashboardNav } from "@/components/dashboard/dashboard-nav";
 import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({
@@ -15,8 +14,8 @@ export default function DashboardLayout({
 
   if (isProjectWorkspace) {
     return (
-      <div className="h-screen overflow-hidden bg-background">
-        <main className="h-full overflow-hidden relative">
+      <div className="h-screen overflow-hidden bg-background relative">
+        <main className="h-full overflow-hidden relative z-10">
           {children}
         </main>
       </div>
@@ -24,14 +23,19 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <DashboardSidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <DashboardHeader />
-        <main className="flex-1 overflow-y-auto relative">
-          {children}
-        </main>
+    <div className="relative min-h-screen bg-background font-sans antialiased overflow-hidden flex flex-col">
+      {/* GLOBAL BACKGROUND BRAND MARK */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
+        <h1 className="text-[25vw] font-black leading-none tracking-tighter text-white/1.5 uppercase italic">
+          Cherry
+        </h1>
       </div>
+
+      <DashboardNav />
+      
+      <main className="flex-1 relative z-10 pt-24 animate-in fade-in duration-1000">
+        {children}
+      </main>
     </div>
   );
 }

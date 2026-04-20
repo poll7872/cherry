@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { deleteProject } from "@/actions/projects";
 import { sileo } from "sileo";
 import { Project } from "@/lib/types";
@@ -21,24 +21,36 @@ interface DeleteProjectDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function DeleteProjectDialog({ project, open, onOpenChange }: DeleteProjectDialogProps) {
+export function DeleteProjectDialog({
+  project,
+  open,
+  onOpenChange,
+}: DeleteProjectDialogProps) {
   const [isPending, startTransition] = useTransition();
 
   const handleDelete = () => {
     startTransition(async () => {
       const result = await deleteProject(project.id);
-      
+
       if (result.errors.length > 0) {
-        result.errors.forEach(err => sileo.error({
-          title: "Error",
-          description: err,
-          styles: { description: "text-black" }
-        }));
+        result.errors.forEach((err) =>
+          sileo.error({
+            title: "Error de solicitud",
+            description: err,
+            styles: {
+              description: "text-foreground font-sans text-sm",
+              title: "font-sans font-bold text-lg",
+            },
+          }),
+        );
       } else {
         sileo.success({
-          title: "Eliminado",
-          description: "El proyecto ha sido borrado correctamente.",
-          styles: { description: "text-black" }
+          title: "Eliminación exitosa",
+          description: "El proyecto ha sido archivado correctamente.",
+          styles: {
+            description: "text-foreground font-sans text-sm",
+            title: "font-sans font-bold text-lg text-primary",
+          },
         });
         onOpenChange(false);
       }
@@ -47,41 +59,43 @@ export function DeleteProjectDialog({ project, open, onOpenChange }: DeleteProje
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] rounded-3xl backdrop-blur-lg bg-white/95 border-none shadow-2xl p-0 overflow-hidden">
-        <div className="p-8">
+      <DialogContent className="sm:max-w-[500px] rounded-[2.5rem]! glass-panel p-0 overflow-hidden border-white/5 shadow-2xl">
+        <div className="p-10 pb-4 text-center space-y-8">
+          <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-3xl flex items-center justify-center text-destructive mb-2 shadow-inner border border-destructive/5">
+            <Trash2 className="h-7 w-7" />
+          </div>
           <DialogHeader className="space-y-4">
-            <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center text-destructive mb-2">
-              <AlertTriangle className="h-8 w-8" />
-            </div>
-            <DialogTitle className="text-2xl font-black tracking-tight text-center">¿Confirmar eliminación?</DialogTitle>
-            <DialogDescription className="text-secondary font-medium leading-relaxed text-center">
-              Estás a punto de eliminar <span className="text-foreground font-bold">&quot;{project.name}&quot;</span>. Esta acción no se puede deshacer y perderás todos los documentos asociados.
+            <DialogTitle className="text-4xl font-black text-white tracking-tighter italic">
+              Confirmar <span className="text-destructive not-italic ml-2">Eliminación</span>
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground/60 font-sans leading-relaxed text-sm">
+              ¿Estás seguro de eliminar este proyecto? <br/>
+              <span className="text-white font-bold opacity-100 mt-2 block">&quot;{project.name}&quot;</span>
             </DialogDescription>
           </DialogHeader>
         </div>
-        
-        <DialogFooter className="flex gap-3 p-6 bg-muted/30">
-          <Button 
-            variant="ghost" 
+
+        <DialogFooter className="flex flex-col sm:flex-row gap-4 p-10 bg-white/2 border-t border-white/5">
+          <button
+            type="button"
             disabled={isPending}
-            onClick={() => onOpenChange(false)} 
-            className="rounded-2xl flex-1 font-bold h-12 hover:bg-white transition-colors"
+            onClick={() => onOpenChange(false)}
+            className="rounded-xl flex-1 font-bold h-12 hover:bg-white/5 text-muted-foreground hover:text-white transition-all text-xs uppercase tracking-widest text-center"
           >
-            Cancelar
-          </Button>
-          <Button 
-            variant="destructive"
+            Abortar
+          </button>
+          <Button
             disabled={isPending}
             onClick={handleDelete}
-            className="rounded-2xl flex-1 h-12 font-bold shadow-lg shadow-destructive/20 hover:shadow-destructive/40 active:scale-95 transition-all"
+            className="rounded-xl flex-1 h-12 font-black shadow-lg shadow-destructive/20 active:scale-[0.98] transition-all bg-destructive text-white text-xs uppercase tracking-widest"
           >
             {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Borrando...
+                Eliminando...
               </>
             ) : (
-              "Sí, Eliminar"
+              "Confirmar Borrado"
             )}
           </Button>
         </DialogFooter>
