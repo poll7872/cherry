@@ -9,7 +9,8 @@ import {
   StoreBackend,
   BackendRuntime,
 } from 'deepagents';
-import { ChatGoogle } from '@langchain/google';
+//import { ChatGoogle } from '@langchain/google';
+import { ChatGroq } from '@langchain/groq';
 import { PostgresSaver } from '@langchain/langgraph-checkpoint-postgres';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -23,6 +24,10 @@ interface ToolCallConfig {
     [key: string]: unknown;
   };
 }
+
+type StreamChunk = {
+  content?: string | Array<{ type?: string; text?: string }>;
+};
 
 @Injectable()
 export class AiAgentService implements OnModuleInit {
@@ -301,9 +306,31 @@ Flujo de trabajo:
 5. Mantén siempre coherencia entre archivos.
 `;
 
-    const model = new ChatGoogle({
+    /*const systemPrompt = `Eres Cherry, asistente experto en escritura científica y LaTeX (estilo IEEE).
+
+Objetivo:
+- Ayudar a escribir papers claros, rigurosos y bien estructurados.
+
+Reglas:
+- Usa tono formal académico.
+- Sugiere mejoras cuando sea necesario.
+- Usa LaTeX correctamente.
+- Modulariza solo si el documento es complejo.
+
+Herramientas:
+- read_latex_document
+- write_latex_document
+- list_latex_documents
+- compile_latex `; PROMPT MINIMUM SIZE*/
+
+    /*const model = new ChatGoogle({
       apiKey: this.configService.get<string>('GOOGLE_API_KEY'),
       model: 'gemini-2.5-flash',
+    });*/
+
+    const model = new ChatGroq({
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      apiKey: this.configService.get<string>('OPENAI_API_KEY'),
     });
 
     this.agent = createDeepAgent({
@@ -323,11 +350,11 @@ Flujo de trabajo:
     });
   }
 
-  async sendMessage(
+  async *sendMessageStream(
     conversationId: string,
     userMessage: string,
     userId?: string,
-  ): Promise<string> {
+  ): AsyncGenerator<string, void, unknown> {
     const config = {
       configurable: {
         thread_id: conversationId,
@@ -336,29 +363,28 @@ Flujo de trabajo:
     };
 
     try {
-      const response = await this.agent.invoke(
-        { messages: [{ role: 'user', content: userMessage }] },
-        config,
+      const stream = await this.agent.stream(
+        {
+          messages: [{ role: 'user', content: userMessage }],
+        },
+        {
+          ...config,
+          streamMode: 'messages',
+        },
       );
 
-      const assistantMessage =
-        response.messages?.[response.messages.length - 1]?.content;
+      for await (const item of stream as any) {
+        const message = item?.[0];
 
-      let textContent = '';
-      if (typeof assistantMessage === 'string') {
-        textContent = assistantMessage;
-      } else if (Array.isArray(assistantMessage)) {
-        textContent = (assistantMessage as Array<string | { text?: string }>)
-          .map((block) =>
-            typeof block === 'string' ? block : block.text || '',
-          )
-          .join('');
+        if (!message) continue;
+
+        if (typeof message.content === 'string') {
+          yield message.content;
+        }
       }
-
-      return textContent || 'No response';
     } catch (error) {
-      console.error('Error invoking agent:', error);
-      return 'Error processing message';
+      console.error('Error invoking agent stream:', error);
+      yield 'Error processing message';
     }
   }
 }

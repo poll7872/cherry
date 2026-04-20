@@ -8,7 +8,9 @@ import {
   UseGuards,
   UseInterceptors,
   ClassSerializerInterceptor,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ConversationsService } from './conversations.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto } from './dto/send-message.dto';
@@ -45,12 +47,28 @@ export class ConversationsController {
   }
 
   @Post('conversations/:id/messages')
-  sendMessage(
+  async sendMessage(
     @Param('id') id: string,
     @Body() dto: SendMessageDto,
     @GetUser() user: User,
+    @Res() res: Response,
   ) {
-    return this.conversationsService.sendMessage(id, dto, user);
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Transfer-Encoding', 'chunked');
+
+    try {
+      const stream = this.conversationsService.sendMessageStream(id, dto, user);
+      for await (const chunk of stream) {
+        res.write(chunk);
+      }
+      res.end();
+    } catch (e) {
+      if (!res.headersSent) {
+        res.status(500).send(e instanceof Error ? e.message : String(e));
+      } else {
+        res.end();
+      }
+    }
   }
 
   @Delete('conversations/:id')

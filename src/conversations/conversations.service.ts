@@ -99,7 +99,11 @@ export class ConversationsService {
     };
   }
 
-  async sendMessage(conversationId: string, dto: SendMessageDto, user: User) {
+  async *sendMessageStream(
+    conversationId: string,
+    dto: SendMessageDto,
+    user: User,
+  ): AsyncGenerator<string, void, unknown> {
     const conversation = await this.conversationRepository.findOne({
       where: { id: conversationId },
       relations: ['project', 'project.user'],
@@ -123,10 +127,17 @@ export class ConversationsService {
     });
     await this.messageRepository.save(userMessage);
 
-    const assistantContent = await this.aiAgentService.sendMessage(
+    const stream = this.aiAgentService.sendMessageStream(
       conversationId,
       dto.content,
     );
+
+    let assistantContent = '';
+
+    for await (const chunk of stream) {
+      assistantContent += chunk;
+      yield chunk;
+    }
 
     const assistantMessage = this.messageRepository.create({
       role: MessageRole.ASSISTANT,
@@ -137,11 +148,6 @@ export class ConversationsService {
 
     conversation.updatedAt = new Date();
     await this.conversationRepository.save(conversation);
-
-    return {
-      userMessage,
-      assistantMessage,
-    };
   }
 
   async deleteConversation(conversationId: string, user: User) {
