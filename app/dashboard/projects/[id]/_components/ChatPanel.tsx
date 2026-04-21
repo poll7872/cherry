@@ -3,10 +3,10 @@
 import { Sparkles, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
-import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useWorkspaceStore } from "@/lib/store/use-workspace-store";
 import { useConversationQuery } from "@/hooks/use-workspace-queries";
+import { useRef } from "react";
 
 export function ChatPanel() {
   const { activeConvId, messages, isSending, sendMessage, setMessages } = useWorkspaceStore();
@@ -15,12 +15,16 @@ export function ChatPanel() {
   // TanStack Query
   const { data: conversation } = useConversationQuery(activeConvId);
 
+  // Referencia para rastrear qué conversación está cargada actualmente
+  const lastConvId = useRef<string | null>(null);
+
   // Sincronizar mensajes cuando cambie la conversación activa
   useEffect(() => {
-    if (conversation) {
+    if (conversation && conversation.id !== lastConvId.current) {
       setMessages(conversation.messages || []);
+      lastConvId.current = conversation.id;
     }
-  }, [conversation?.id, setMessages]);
+  }, [conversation, setMessages]);
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
