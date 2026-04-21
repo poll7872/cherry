@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "La plataforma de nivel producción para investigadores y profesionales que exigen excelencia.",
 };
 
+import { QueryProvider } from "@/components/providers/query-provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,7 +35,9 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-white font-sans overflow-x-hidden">
         <div className="noise-obsidian" />
         <ToastNotification />
-        {children}
+        <QueryProvider>
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );
