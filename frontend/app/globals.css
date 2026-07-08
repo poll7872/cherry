@@ -1,0 +1,162 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Premium Light Theme */
+  --background: 99% 0.005 250; /* Casi blanco, ligeramente perlado */
+  --foreground: 0% 0 0;
+
+  --primary: 62.6% 0.25 25; /* Neon Cherry */
+  --primary-foreground: 100% 0 0;
+
+  --card: 98% 0.002 250; /* Gris súper suave */
+  --card-foreground: 5% 0 0;
+
+  --popover: 100% 0 0;
+  --popover-foreground: 5% 0 0;
+
+  --secondary: 95% 0.005 250;
+  --secondary-foreground: 8% 0 0;
+
+  --muted: 95% 0.005 250;
+  --muted-foreground: 45% 0.01 250;
+
+  --accent: 90% 0.02 25; /* Cherry ultra suave para hovers */
+  --accent-foreground: 15% 0.05 25;
+
+  --destructive: 55% 0.22 25;
+  --destructive-foreground: 100% 0 0;
+
+  --border: 92% 0.005 250;
+  --input: 92% 0.005 250;
+  --ring: 62.6% 0.25 25 / 0.3;
+}
+
+.dark {
+  /* OLED Black Premium Theme */
+  --background: 0% 0 0;
+  --foreground: 98% 0.01 250;
+
+  --primary: 62.6% 0.25 25;
+  --primary-foreground: 100% 0 0;
+
+  --card: 8% 0.01 250;
+  --card-foreground: 98% 0.01 250;
+
+  --popover: 5% 0.01 250;
+  --popover-foreground: 98% 0.01 250;
+
+  --secondary: 15% 0.01 250;
+  --secondary-foreground: 98% 0.01 250;
+
+  --muted: 12% 0.01 250;
+  --muted-foreground: 60% 0.01 250;
+
+  --accent: 18% 0.02 25;
+  --accent-foreground: 98% 0.01 250;
+
+  --destructive: 55% 0.22 25;
+  --destructive-foreground: 98% 0.01 250;
+
+  --border: 15% 0.01 250;
+  --input: 12% 0.01 250;
+  --ring: 62.6% 0.25 25 / 0.4;
+}
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui;
+  --font-mono: "JetBrains Mono", ui-mono, monospace;
+
+  --color-background: oklch(var(--background));
+  --color-foreground: oklch(var(--foreground));
+
+  --color-primary: oklch(var(--primary));
+  --color-primary-foreground: oklch(var(--primary-foreground));
+
+  --color-card: oklch(var(--card));
+  --color-card-foreground: oklch(var(--card-foreground));
+
+  --color-popover: oklch(var(--popover));
+  --color-popover-foreground: oklch(var(--popover-foreground));
+
+  --color-secondary: oklch(var(--secondary));
+  --color-secondary-foreground: oklch(var(--secondary-foreground));
+
+  --color-muted: oklch(var(--muted));
+  --color-muted-foreground: oklch(var(--muted-foreground));
+
+  --color-accent: oklch(var(--accent));
+  --color-accent-foreground: oklch(var(--accent-foreground));
+
+  --color-destructive: oklch(var(--destructive));
+  --color-destructive-foreground: oklch(var(--destructive-foreground));
+
+  --color-border: oklch(var(--border));
+  --color-input: oklch(var(--input));
+  --color-ring: oklch(var(--ring));
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+
+  --shadow-obsidian:
+    0 0 0 1px var(--color-border), 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+  --shadow-laser: 0 0 10px -2px oklch(var(--primary) / 0.15);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary selection:text-white font-sans overflow-x-hidden;
+    font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+  }
+}
+
+/* Obsidian Identity Components */
+
+.glass-panel {
+  @apply bg-card/25 backdrop-blur-2xl border border-white/10 shadow-obsidian rounded-3xl;
+}
+
+.laser-glow {
+  @apply shadow-laser border-primary/20;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, white 0%, rgba(255, 255, 255, 0.5) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Grid removed as per user request */
+.bg-grid-obsidian {
+  display: none;
+}
+
+.noise-obsidian {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.15;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Staggered Animations */
+.animate-slide-up {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
