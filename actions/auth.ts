@@ -8,11 +8,16 @@ import {
   ResetPasswordSchema,
   SignupSchema,
   SuccessResponseSchema,
+  UserResponseSchema,
 } from "@/lib/schemas";
 import type { ActionState, FormState } from "@/lib/types";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { API_URL, COOKIE_SESSION_NAME, SESSION_EXPIRATION_DAYS } from "@/lib/constants";
+import {
+  API_URL,
+  COOKIE_SESSION_NAME,
+  SESSION_EXPIRATION_DAYS,
+} from "@/lib/constants";
 
 export async function verifyEmail(
   _prevState: FormState,
@@ -94,7 +99,9 @@ export async function signup(
     if (!req.ok) {
       const parsedError = ErrorResponseSchema.parse(json);
       return {
-        errors: Array.isArray(parsedError.message) ? parsedError.message : [parsedError.message],
+        errors: Array.isArray(parsedError.message)
+          ? parsedError.message
+          : [parsedError.message],
         success: "",
       };
     }
@@ -283,4 +290,31 @@ export async function resetPassword(
       success: "",
     };
   }
+}
+
+export async function getUser() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_SESSION_NAME)?.value;
+  if (!token) return null;
+
+  try {
+    const req = await fetch(`${API_URL}/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!req.ok) return null;
+
+    const json = await req.json();
+    return UserResponseSchema.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+export async function logout() {
+  const cookieStore = await cookies();
+  cookieStore.delete(COOKIE_SESSION_NAME);
+  redirect("/auth/login");
 }

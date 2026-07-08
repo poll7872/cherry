@@ -30,8 +30,8 @@ export function EditorPanel() {
   }, [activeDoc, setContent]);
 
   return (
-    <div className="flex-1 flex flex-col bg-black">
-      <div className="px-8 py-2 bg-white/2 border-b border-white/5 flex items-center justify-between">
+    <div className="flex-1 flex flex-col bg-background">
+      <div className="px-8 py-2 bg-card/60 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Cpu className="h-3 w-3 text-primary" />
           <span className="text-[9px] font-mono font-bold text-muted-foreground/30 uppercase tracking-widest">

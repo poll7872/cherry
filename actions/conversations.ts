@@ -94,3 +94,31 @@ export async function createConversation(
     return { errors: ["Error de conexión"] };
   }
 }
+
+export async function deleteConversation(convId: string, projectId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_SESSION_NAME)?.value;
+
+  if (!token) {
+    return { errors: ["No autorizado"], success: false };
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/conversations/${convId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      return { errors: ["Error al eliminar la conversación"], success: false };
+    }
+
+    revalidatePath(`/dashboard/projects/${projectId}`);
+    return { errors: [], success: true };
+  } catch (err) {
+    console.error("Delete conversation error:", err);
+    return { errors: ["Error de conexión"], success: false };
+  }
+}

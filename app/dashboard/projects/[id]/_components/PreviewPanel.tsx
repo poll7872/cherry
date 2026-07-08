@@ -5,7 +5,7 @@ import { useWorkspaceStore } from "@/lib/store/use-workspace-store";
 
 const PDFViewer = dynamic(() => import("@/components/documents/pdf-viewer").then(mod => mod.PDFViewer), {
   ssr: false,
-  loading: () => <div className="h-full w-full bg-white/2 animate-pulse" />
+  loading: () => <div className="h-full w-full bg-black/5 dark:bg-zinc-900 animate-pulse" />
 });
 
 interface PreviewPanelProps {
@@ -20,7 +20,7 @@ export function PreviewPanel({ projectId }: PreviewPanelProps) {
   };
 
   return (
-    <div className="w-[45%] h-full border-l border-white/5 bg-black">
+    <div className="w-[45%] h-full border-l border-border bg-background">
       <PDFViewer 
         file={pdfFile} 
         isCompiling={isCompiling} 

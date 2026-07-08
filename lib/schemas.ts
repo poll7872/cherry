@@ -54,6 +54,11 @@ export const LoginResponseSchema = z.object({
   access_token: z.string(),
 });
 
+export const UserResponseSchema = z.object({
+  email: z.email(),
+  name: z.string(),
+});
+
 export const ErrorResponseSchema = z.object({
   message: z.union([z.string(), z.array(z.string())]), // ← aceptar ambos
   error: z.string(),

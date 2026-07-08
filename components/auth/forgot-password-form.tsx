@@ -49,7 +49,7 @@ export function ForgotPasswordForm({
       <div className="flex flex-col items-start gap-6">
         <Logo />
         <div className="space-y-3">
-          <h1 className="text-5xl font-black text-white tracking-tighter leading-none">
+          <h1 className="text-5xl font-black text-foreground tracking-tighter leading-none">
             Recuperar <span className="text-primary italic">Acceso</span>
           </h1>
           <p className="text-sm text-muted-foreground font-sans max-w-[340px] leading-relaxed">
@@ -72,7 +72,7 @@ export function ForgotPasswordForm({
                 type="email"
                 placeholder="investigador@ejemplo.com"
                 required
-                className="h-14 bg-white/3 border-white/10 focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:opacity-30"
+                className="h-14 bg-black/5 dark:bg-white/5 border-border focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:text-muted-foreground/50"
               />
             </Field>
             <Field className="pt-4">
@@ -89,10 +89,10 @@ export function ForgotPasswordForm({
       </div>
 
       <div className="flex flex-col items-start gap-4">
-        <div className="h-px w-12 bg-white/10" />
+        <div className="h-px w-12 bg-border" />
         <p className="text-sm text-muted-foreground font-sans">
           ¿Recordaste tu contraseña?{" "}
-          <Link href="/auth/login" className="text-white font-bold hover:text-primary transition-all underline decoration-primary/40 underline-offset-4">
+          <Link href="/auth/login" className="text-foreground font-bold hover:text-primary transition-all underline decoration-primary/40 underline-offset-4">
             Volver al inicio
           </Link>
         </p>

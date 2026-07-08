@@ -35,19 +35,19 @@ export function ChatPanel() {
   };
 
   return (
-    <div className="flex-1 flex flex-col transition-colors duration-700 bg-white/3">
+    <div className="flex-1 flex flex-col transition-colors duration-700 bg-black/5 dark:bg-white/5">
       {/* Chat Container */}
       <div className="flex-1 overflow-y-auto p-12 space-y-12 no-scrollbar scroll-smooth">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center space-y-8 opacity-10">
             <Sparkles className="h-10 w-10 text-primary" />
-            <p className="text-xl font-black tracking-[0.4em] italic uppercase text-white">¿Cómo puedo ayudarte hoy?</p>
+            <p className="text-xl font-black tracking-[0.4em] italic uppercase text-foreground">¿Cómo puedo ayudarte hoy?</p>
           </div>
         ) : (
           messages.map((msg, i) => (
             <div key={msg.id || i} className="flex gap-10 max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-1000">
-              <div className={`w-8 h-8 rounded-2xl flex items-center justify-center shrink-0 border border-white/5 shadow-2xl transition-all duration-700 ${
-                msg.role === "assistant" ? "bg-primary text-white scale-110" : "bg-white/5 text-muted-foreground/30"
+              <div className={`w-8 h-8 rounded-2xl flex items-center justify-center shrink-0 border border-border shadow-2xl transition-all duration-700 ${
+                msg.role === "assistant" ? "bg-primary text-white scale-110" : "bg-black/5 dark:bg-white/5 text-muted-foreground/30"
               }`}>
                 {msg.role === "assistant" ? <Sparkles className="h-4 w-4" /> : <p className="font-black text-[9px]">S1</p>}
               </div>
@@ -70,7 +70,7 @@ export function ChatPanel() {
                   ) : (
                     <MarkdownRenderer 
                       content={msg.content}
-                      className="text-base leading-relaxed font-medium tracking-tight text-white/90 prose-invert prose-p:text-white/80 prose-strong:text-white prose-strong:font-black"
+                      className="text-base leading-relaxed font-medium tracking-tight text-foreground/90 dark:prose-invert prose-p:text-foreground/80 prose-strong:text-foreground prose-strong:font-black"
                     />
                   )}
                 </div>
@@ -86,12 +86,12 @@ export function ChatPanel() {
         <div className="max-w-4xl mx-auto">
           <form 
             onSubmit={handleSendMessage}
-            className="glass-panel border-white/10 p-3 rounded-4xl shadow-2xl backdrop-blur-3xl flex items-end gap-3 focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/20 transition-all duration-700"
+            className="glass-panel border-border p-3 rounded-4xl shadow-2xl backdrop-blur-3xl flex items-end gap-3 focus-within:border-primary/60 focus-within:ring-1 focus-within:ring-primary/20 transition-all duration-700"
           >
             <textarea 
               placeholder="Empieza tu paper de investigación..."
               rows={1}
-              className="flex-1 bg-transparent border-none resize-none focus:ring-0 text-base font-medium px-4 py-3 max-h-40 outline-none text-white placeholder:text-muted-foreground/20 leading-relaxed"
+              className="flex-1 bg-transparent border-none resize-none focus:ring-0 text-base font-medium px-4 py-3 max-h-40 outline-none text-foreground placeholder:text-muted-foreground/20 leading-relaxed"
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               onKeyDown={(e) => {

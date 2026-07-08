@@ -38,7 +38,7 @@ export function PDFViewer({
 }: PDFViewerProps) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
-  const [scale, setScale] = useState(0.9);
+  const [scale, setScale] = useState(1.0);
   const [rotate, setRotate] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -48,21 +48,34 @@ export function PDFViewer({
     return file;
   }, [file]);
 
-  const [blobState, setBlobState] = useState({ file: null as PDFFile, url: "" });
+  const [blobState, setBlobState] = useState({
+    file: null as PDFFile,
+    url: "",
+  });
 
-  // Patrón de sincronización de props de React: 
+  // Patrón de sincronización de props de React:
   // En lugar de useEffect para el setState, sincronizamos durante el render
   if (file !== blobState.file) {
     let newUrl = "";
     if (typeof normalizedFile === "string") {
       newUrl = normalizedFile;
-    } else if (normalizedFile && typeof normalizedFile === "object" && "data" in normalizedFile) {
-      const blob = new Blob([normalizedFile.data.buffer as ArrayBuffer], { type: "application/pdf" });
+    } else if (
+      normalizedFile &&
+      typeof normalizedFile === "object" &&
+      "data" in normalizedFile
+    ) {
+      const blob = new Blob([normalizedFile.data.buffer as ArrayBuffer], {
+        type: "application/pdf",
+      });
       newUrl = URL.createObjectURL(blob);
     }
-    
+
     // Revocar el URL anterior si existía uno local
-    if (blobState.url && typeof blobState.file !== "string" && blobState.file !== null) {
+    if (
+      blobState.url &&
+      typeof blobState.file !== "string" &&
+      blobState.file !== null
+    ) {
       URL.revokeObjectURL(blobState.url);
     }
 
@@ -91,7 +104,9 @@ export function PDFViewer({
   };
 
   const changePage = (offset: number) => {
-    setPageNumber((prev) => Math.min(Math.max(1, prev + offset), numPages ?? 1));
+    setPageNumber((prev) =>
+      Math.min(Math.max(1, prev + offset), numPages ?? 1),
+    );
   };
 
   const handleDownload = useCallback(() => {
@@ -126,28 +141,31 @@ export function PDFViewer({
   };
 
   return (
-    <div ref={containerRef} className="flex flex-col h-full bg-black relative overflow-hidden">
+    <div
+      ref={containerRef}
+      className="flex flex-col h-full bg-background relative overflow-hidden"
+    >
       {/* Viewer Toolbar (Floating Glass) */}
-      <div className="flex items-center justify-between px-6 py-2 bg-white/2 backdrop-blur-3xl border-b border-white/5 z-20 h-16">
-        <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/5 shadow-inner">
+      <div className="flex items-center justify-between px-6 py-2 bg-card/60 backdrop-blur-3xl border-b border-border z-20 h-16">
+        <div className="flex items-center gap-2 bg-black/5 dark:bg-black/40 p-1 rounded-xl border border-border shadow-inner">
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 rounded-lg hover:bg-white/5 text-muted-foreground/30 hover:text-white transition-all"
+            className="h-7 w-7 rounded-lg hover:bg-black/10 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground transition-all"
             onClick={() => setScale((s) => Math.max(s - 0.1, 0.4))}
             disabled={!normalizedFile}
           >
             <ZoomOut className="h-3 w-3" />
           </Button>
-          <div className="h-3 w-px bg-white/5" />
+          <div className="h-3 w-px bg-border" />
           <span className="text-[9px] font-mono font-black w-10 text-center text-primary tracking-widest opacity-80">
             {Math.round(scale * 100)}%
           </span>
-          <div className="h-3 w-px bg-white/5" />
+          <div className="h-3 w-px bg-border" />
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 rounded-lg hover:bg-white/5 text-muted-foreground/30 hover:text-white transition-all"
+            className="h-7 w-7 rounded-lg hover:bg-black/10 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground transition-all"
             onClick={() => setScale((s) => Math.min(s + 0.1, 3))}
             disabled={!normalizedFile}
           >
@@ -156,11 +174,11 @@ export function PDFViewer({
         </div>
 
         {/* Page Navigation */}
-        <div className="flex items-center gap-4 bg-black/40 px-3 py-1 rounded-xl border border-white/5 shadow-inner">
+        <div className="flex items-center gap-4 bg-black/5 dark:bg-black/40 px-3 py-1 rounded-xl border border-border shadow-inner">
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 rounded-lg hover:bg-white/5 text-muted-foreground/30 hover:text-white"
+            className="h-7 w-7 rounded-lg hover:bg-black/10 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground"
             onClick={() => changePage(-1)}
             disabled={!normalizedFile || pageNumber <= 1}
           >
@@ -174,9 +192,11 @@ export function PDFViewer({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 rounded-lg hover:bg-white/5 text-muted-foreground/30 hover:text-white"
+            className="h-7 w-7 rounded-lg hover:bg-black/10 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground"
             onClick={() => changePage(1)}
-            disabled={!normalizedFile || (numPages !== null && pageNumber >= numPages)}
+            disabled={
+              !normalizedFile || (numPages !== null && pageNumber >= numPages)
+            }
           >
             <ChevronRight className="h-3 w-3" />
           </Button>
@@ -186,7 +206,7 @@ export function PDFViewer({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-xl hover:bg-white/5 text-muted-foreground/20 hover:text-white transition-all"
+            className="h-8 w-8 rounded-xl hover:bg-black/10 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground transition-all"
             onClick={() => setRotate((r) => (r + 90) % 360)}
             disabled={!normalizedFile}
           >
@@ -195,13 +215,13 @@ export function PDFViewer({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-xl hover:bg-white/5 text-muted-foreground/20 hover:text-white"
+            className="h-8 w-8 rounded-xl hover:bg-black/10 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground"
             onClick={handlePrint}
             disabled={!normalizedFile}
           >
             <Printer className="h-3 w-3" />
           </Button>
-          <div className="h-4 w-px bg-white/5 mx-1" />
+          <div className="h-4 w-px bg-border mx-1" />
           <Button
             variant="ghost"
             size="icon"
@@ -215,10 +235,10 @@ export function PDFViewer({
       </div>
 
       {/* PDF Content Area */}
-      <div className="flex-1 overflow-auto p-12 flex justify-center bg-black custom-scrollbar relative">
+      <div className="flex-1 overflow-auto flex justify-center bg-background custom-scrollbar relative">
         {/* Compilation Overlay */}
         {isCompiling && (
-          <div className="absolute inset-0 z-30 bg-black/60 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-500">
+          <div className="absolute inset-0 z-30 bg-background/80 backdrop-blur-md flex items-center justify-center animate-in fade-in duration-500">
             <div className="flex flex-col items-center gap-6">
               <div className="relative">
                 <Loader2 className="h-14 w-14 text-primary animate-spin opacity-20" />
@@ -227,7 +247,7 @@ export function PDFViewer({
                 </div>
               </div>
               <div className="space-y-2 text-center">
-                <p className="text-[10px] font-black text-white uppercase tracking-[0.6em] animate-pulse">
+                <p className="text-[10px] font-black text-foreground uppercase tracking-[0.6em] animate-pulse">
                   Sincronizando
                 </p>
                 <div className="h-0.5 w-12 bg-primary mx-auto rounded-full shadow-[0_0_10px_rgba(210,4,45,0.8)]" />
@@ -237,33 +257,43 @@ export function PDFViewer({
         )}
 
         {normalizedFile ? (
-          <div className="bg-black shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-sm relative transition-all duration-1000 border border-white/5">
+          <div className="relative transition-all duration-1000 flex-1 w-full flex justify-center">
             <PDFDocument
               file={normalizedFile}
               onLoadSuccess={onDocumentLoadSuccess}
-              loading={<div className="p-20 text-center"><Loader2 className="h-10 w-10 animate-spin text-primary mx-auto opacity-20" /></div>}
-              error={<div className="p-20 text-destructive text-center"><AlertCircle className="h-8 w-8 mx-auto mb-4" /> Error en renderizado PDF</div>}
+              loading={
+                <div className="p-20 text-center">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto opacity-20" />
+                </div>
+              }
+              error={
+                <div className="p-20 text-destructive text-center">
+                  <AlertCircle className="h-8 w-8 mx-auto mb-4" /> Error en
+                  renderizado PDF
+                </div>
+              }
             >
               <PDFPage
                 pageNumber={pageNumber}
                 scale={scale}
                 rotate={rotate}
-                className="shadow-3xl"
+                className="w-full flex justify-center"
               />
             </PDFDocument>
           </div>
         ) : (
-          <div className="w-full max-w-2xl aspect-[1/1.41] glass-panel rounded-5xl relative flex flex-col items-center justify-center p-20 text-center border-white/5 bg-white/2 transition-all duration-1000">
+          <div className="w-full max-w-2xl aspect-[1/1.41] glass-panel rounded-5xl relative flex flex-col items-center justify-center p-20 text-center border-border bg-card/60 transition-all duration-1000">
             <div className="space-y-8">
-              <div className="w-24 h-24 bg-white/5 rounded-4xl flex items-center justify-center text-primary/30 mx-auto border border-white/5 shadow-inner">
+              <div className="w-24 h-24 bg-black/5 dark:bg-white/5 rounded-4xl flex items-center justify-center text-primary/30 mx-auto border border-border shadow-inner">
                 <Zap className="h-10 w-10" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-xl font-black text-white tracking-widest uppercase italic">
+                <h3 className="text-xl font-black text-foreground tracking-widest uppercase italic">
                   Vista Previa
                 </h3>
-                <p className="text-muted-foreground/40 font-medium leading-relaxed max-w-[280px] text-[11px] mx-auto">
-                  Compila tu proyecto para visualizar el documento PDF actualizado.
+                <p className="text-muted-foreground/40 font-medium leading-relaxed max-w-70 text-[11px] mx-auto">
+                  Compila tu proyecto para visualizar el documento PDF
+                  actualizado.
                 </p>
               </div>
               <Button
@@ -271,7 +301,11 @@ export function PDFViewer({
                 disabled={isCompiling}
                 className="rounded-2xl font-black h-12 px-12 bg-primary text-white shadow-2xl shadow-primary/20 active:scale-95 transition-all text-[10px] uppercase tracking-[0.2em] border-none"
               >
-                {isCompiling ? <Loader2 className="h-4 w-4 animate-spin" /> : "Compilar PDF"}
+                {isCompiling ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Compilar PDF"
+                )}
               </Button>
             </div>
           </div>
@@ -283,7 +317,7 @@ export function PDFViewer({
         variant="ghost"
         size="icon"
         onClick={toggleFullscreen}
-        className="absolute bottom-10 right-10 h-14 w-14 rounded-3xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-3xl text-white/40 hover:text-white hover:bg-white/10 z-40 transition-all active:scale-90"
+        className="absolute bottom-10 right-10 h-14 w-14 rounded-3xl bg-black/5 dark:bg-white/5 border border-border shadow-2xl backdrop-blur-3xl text-muted-foreground hover:text-foreground hover:bg-black/10 dark:hover:bg-white/10 z-40 transition-all active:scale-90"
       >
         <Maximize2 className="h-5 w-5" />
       </Button>
@@ -304,7 +338,6 @@ export function PDFViewer({
         }
         .react-pdf__Page__canvas {
           margin: 0 auto;
-          filter: drop-shadow(0 0 30px rgba(0,0,0,0.5));
         }
       `}</style>
     </div>

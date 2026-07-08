@@ -7,13 +7,23 @@ interface LogoProps {
 
 export function Logo({ className }: LogoProps) {
   return (
-    <Image
-      src="/logo_bg_white.svg"
-      alt="Cherry"
-      width={20}
-      height={20}
-      className={cn("w-32 h-auto", className)}
-      priority
-    />
+    <>
+      <Image
+        src="/logo_bg_white.svg"
+        alt="Cherry"
+        width={20}
+        height={20}
+        className={cn("w-32 h-auto dark:hidden", className)}
+        priority
+      />
+      <Image
+        src="/logo_bg_black.svg"
+        alt="Cherry"
+        width={20}
+        height={20}
+        className={cn("w-32 h-auto hidden dark:block", className)}
+        priority
+      />
+    </>
   );
 }

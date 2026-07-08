@@ -61,14 +61,14 @@ export function CreateProjectDialog() {
           Nuevo Proyecto
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] rounded-[2.5rem]! glass-panel p-0 overflow-hidden border-white/5 shadow-2xl">
+      <DialogContent className="sm:max-w-[500px] rounded-[2.5rem]! glass-panel p-0 overflow-hidden border-border shadow-2xl">
         <form action={action}>
           <div className="p-10 pb-4 text-center space-y-8">
-            <div className="mx-auto w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center text-primary mb-2 shadow-inner border border-white/5">
+            <div className="mx-auto w-16 h-16 bg-black/5 dark:bg-white/5 rounded-3xl flex items-center justify-center text-primary mb-2 shadow-inner border border-border">
               <BookOpen className="h-7 w-7" />
             </div>
             <DialogHeader className="space-y-4">
-              <DialogTitle className="text-3xl font-black text-white tracking-tight leading-tight italic">
+              <DialogTitle className="text-3xl font-black text-foreground tracking-tight leading-tight italic">
                 Nuevo proyecto
               </DialogTitle>
               <DialogDescription className="text-muted-foreground/60 font-sans leading-relaxed text-sm">
@@ -91,7 +91,7 @@ export function CreateProjectDialog() {
                     placeholder="ej. Análisis de Sistemas Complejos"
                     required
                     disabled={isPending}
-                    className="h-14 bg-white/3 border-white/10 focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:opacity-30 px-6 mt-2"
+                    className="h-14 bg-black/5 dark:bg-white/5 border-border focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:text-muted-foreground/50 px-6 mt-2"
                   />
                 </Field>
                 <Field>
@@ -107,19 +107,19 @@ export function CreateProjectDialog() {
                     name="description"
                     placeholder="Describe brevemente el alcance del paper..."
                     disabled={isPending}
-                    className="h-14 bg-white/3 border-white/10 focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:opacity-30 px-6 mt-2"
+                    className="h-14 bg-black/5 dark:bg-white/5 border-border focus:border-primary/40 focus:ring-primary/10 transition-all rounded-2xl font-sans text-sm placeholder:text-muted-foreground/50 px-6 mt-2"
                   />
                 </Field>
               </FieldGroup>
             </div>
           </div>
-          <DialogFooter className="flex flex-col sm:flex-row gap-4 p-10 bg-white/2 border-t border-white/5">
+          <DialogFooter className="flex flex-col sm:flex-row gap-4 p-10 bg-card/60 border-t border-border">
             <Button
               type="button"
               variant="ghost"
               disabled={isPending}
               onClick={() => setOpen(false)}
-              className="rounded-xl flex-1 font-bold h-12 hover:bg-white/5 text-muted-foreground hover:text-white transition-all text-xs uppercase tracking-widest"
+              className="rounded-xl flex-1 font-bold h-12 hover:bg-black/5 dark:hover:bg-white/5 text-muted-foreground hover:text-foreground transition-all text-xs uppercase tracking-widest"
             >
               Cancelar
             </Button>
