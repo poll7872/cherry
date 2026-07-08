@@ -9,8 +9,7 @@ import {
   StoreBackend,
   BackendRuntime,
 } from 'deepagents';
-//import { ChatGoogle } from '@langchain/google';
-import { ChatGroq } from '@langchain/groq';
+import { ChatGoogle } from '@langchain/google';
 import { PostgresSaver } from '@langchain/langgraph-checkpoint-postgres';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -254,7 +253,10 @@ export class AiAgentService implements OnModuleInit {
         description:
           'Compile the entire LaTeX project to PDF using Daytona sandbox. All files in the project are automatically included. Specify the entry point filename (e.g. "main.tex").',
         schema: z.object({
-          filename: z.string().default('main.tex'),
+          filename: z
+            .string()
+            .optional()
+            .describe('The main LaTeX file to compile, usually main.tex'),
         }),
       },
     );
@@ -306,31 +308,9 @@ Flujo de trabajo:
 5. Mantén siempre coherencia entre archivos.
 `;
 
-    /*const systemPrompt = `Eres Cherry, asistente experto en escritura científica y LaTeX (estilo IEEE).
-
-Objetivo:
-- Ayudar a escribir papers claros, rigurosos y bien estructurados.
-
-Reglas:
-- Usa tono formal académico.
-- Sugiere mejoras cuando sea necesario.
-- Usa LaTeX correctamente.
-- Modulariza solo si el documento es complejo.
-
-Herramientas:
-- read_latex_document
-- write_latex_document
-- list_latex_documents
-- compile_latex `; PROMPT MINIMUM SIZE*/
-
-    /*const model = new ChatGoogle({
+    const model = new ChatGoogle({
       apiKey: this.configService.get<string>('GOOGLE_API_KEY'),
       model: 'gemini-2.5-flash',
-    });*/
-
-    const model = new ChatGroq({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-      apiKey: this.configService.get<string>('OPENAI_API_KEY'),
     });
 
     this.agent = createDeepAgent({
@@ -373,8 +353,8 @@ Herramientas:
         },
       );
 
-      for await (const item of stream as any) {
-        const message = item?.[0];
+      for await (const item of stream as AsyncIterable<unknown[]>) {
+        const message = item?.[0] as StreamChunk | undefined;
 
         if (!message) continue;
 

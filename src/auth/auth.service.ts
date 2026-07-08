@@ -118,4 +118,12 @@ export class AuthService {
       message: 'Password updated successfully',
     };
   }
+
+  async getUser(userId: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    return { email: user.email, name: user.name };
+  }
 }

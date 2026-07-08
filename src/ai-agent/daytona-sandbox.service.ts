@@ -63,7 +63,7 @@ export class DaytonaSandboxService implements OnModuleInit {
     // 3. Create a fresh sandbox and persist its ID
     this.logger.log(`Creating new sandbox for project ${projectId}`);
     const sandbox = await this.daytona.create({
-      image: 'poll7872/arch-texlive:v2',
+      image: 'poll7872/arch-texlive:v3',
     });
 
     // Persist the sandbox ID so we never create a second one for this project

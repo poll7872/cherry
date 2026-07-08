@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -11,49 +12,19 @@ import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { LaTeXDocument } from 'src/latex/entities/latex-document.entity';
 import { DaytonaSandboxService } from 'src/ai-agent/daytona-sandbox.service';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
-const MAIN_TEX_TEMPLATE = String.raw`\documentclass[journal]{IEEEtran}
-\usepackage[spanish]{babel}
-\usepackage[utf8]{inputenc}
-\usepackage{graphicx}
-\usepackage{amsmath}
-\usepackage{cite}
+function getMainTexTemplate(): string {
+  return readFileSync(join(__dirname, 'templates', 'main.tex'), 'utf-8');
+}
 
-\begin{document}
-\title{Titulo del Paper}
-\author{Autor, Member, IEEE}
-
-\maketitle
-
-\begin{abstract}
-Resumen del documento.
-\end{abstract}
-
-\begin{IEEEkeywords}
-palabras clave
-\end{IEEEkeywords}
-
-\section{Introduccion}
-\label{intro}
-
-\section{Trabajo Relacionado}
-\label{related}
-
-\section{Metodologia}
-\label{method}
-
-\section{Resultados}
-\label{results}
-
-\section{Conclusiones}
-\label{conclusion}
-
-\begin{thebibliography}{99}
-\end{thebibliography}
-\end{document}`;
+const MAIN_TEX_TEMPLATE = getMainTexTemplate();
 
 @Injectable()
 export class ProjectsService {
+  private readonly logger = new Logger(ProjectsService.name);
+
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
@@ -77,7 +48,54 @@ export class ProjectsService {
     });
     await this.latexRepository.save(mainDoc);
 
+    // Initialize sandbox and compile in background
+    this.initializeSandboxBackground(savedProject.id).catch((err: unknown) => {
+      this.logger.error(
+        `Failed to trigger background sandbox initialization for project ${savedProject.id}`,
+        err instanceof Error ? err.stack : String(err),
+      );
+    });
+
     return savedProject;
+  }
+
+  private async initializeSandboxBackground(projectId: string) {
+    try {
+      this.logger.log(
+        `Starting background sandbox initialization for project ${projectId}`,
+      );
+      // 1. Write the main.tex template to the sandbox (this will also create the sandbox if needed via daytonaSandboxService)
+      await this.daytonaSandboxService.writeFile(
+        projectId,
+        'main.tex',
+        MAIN_TEX_TEMPLATE,
+      );
+
+      // 2. Compile LaTeX
+      this.logger.log(
+        `Compiling LaTeX template for project ${projectId} in sandbox`,
+      );
+      const result = await this.daytonaSandboxService.compileLatex(projectId);
+
+      // 3. Save the compiled PDF back to the project if successful
+      if (result.success && result.pdfBase64) {
+        await this.projectRepository.update(projectId, {
+          compiledPdfBase64: result.pdfBase64,
+        });
+        this.logger.log(
+          `Successfully compiled and saved initial PDF for project ${projectId}`,
+        );
+      } else {
+        this.logger.warn(
+          `Background compilation for project ${projectId} failed. Output: ${result.output}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error during background sandbox initialization for project ${projectId}:`,
+        error instanceof Error ? error.stack : error,
+      );
+    }
   }
 
   async findAll(user: User) {
