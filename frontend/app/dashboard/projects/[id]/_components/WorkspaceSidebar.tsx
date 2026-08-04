@@ -45,7 +45,8 @@ export function WorkspaceSidebar({
   setDocToDelete,
   setConvToDelete,
 }: WorkspaceSidebarProps) {
-  const { activeTab, isSidebarOpen, setActiveTab } = useUIStore();
+  const { activeTab, isSidebarOpen, setActiveTab, setEditorMode } =
+    useUIStore();
   const {
     activeDocId,
     activeConvId,
@@ -62,10 +63,12 @@ export function WorkspaceSidebar({
 
   const handleSelectDocument = (docId: string) => {
     setActiveDocId(docId);
+    setEditorMode(true);
   };
 
   const handleSelectConversation = (convId: string) => {
     setActiveConvId(convId);
+    setEditorMode(false);
   };
 
   return (

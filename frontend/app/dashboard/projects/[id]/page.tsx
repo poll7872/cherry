@@ -89,7 +89,11 @@ export default function UnifiedWorkspace() {
         <WorkspaceHeader projectId={projectId} />
 
         <div className="flex-1 flex overflow-hidden">
-          {editorMode ? <EditorPanel /> : <ChatPanel />}
+          {editorMode ? (
+            <EditorPanel projectId={projectId} />
+          ) : (
+            <ChatPanel projectId={projectId} />
+          )}
           <PreviewPanel projectId={projectId} />
         </div>
       </div>
