@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Layout, Code, Zap } from "lucide-react";
+import { CloudCheck, Layout, Code, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/lib/store/use-ui-store";
@@ -46,7 +46,7 @@ export function WorkspaceHeader({ projectId }: WorkspaceHeaderProps) {
           {project?.name || "CARGANDO..."}
         </h1>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-primary/5 border border-primary/10 text-[8px] font-mono text-primary uppercase tracking-[0.2em]">
-          <Activity className="h-2.5 w-2.5 animate-pulse" />
+          <CloudCheck className="h-2.5 w-2.5 animate-pulse" />
           Sincronizado
         </div>
       </div>
