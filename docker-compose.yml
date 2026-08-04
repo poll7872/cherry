@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: cherry-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cherry
+      POSTGRES_PASSWORD: cherry
+      POSTGRES_DB: cherry
+    ports:
+      - "5432:5432"
+    volumes:
+      - cherry_pgdata:/var/lib/postgresql/data
+
+volumes:
+  cherry_pgdata:
