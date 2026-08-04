@@ -41,7 +41,7 @@ export function ResetPasswordForm({
         sileo.error({
           title: "Error",
           description: error,
-          styles: { description: "text-black" },
+          styles: { description: "text-foreground font-sans text-sm" },
         }),
       )
     }
@@ -50,7 +50,7 @@ export function ResetPasswordForm({
       sileo.success({
         title: "Contraseña restablecida",
         description: state.success + ". Redirigiendo al login...",
-        styles: { description: "text-black" },
+        styles: { description: "text-foreground font-sans text-sm" },
       })
       
       const timer = setTimeout(() => {

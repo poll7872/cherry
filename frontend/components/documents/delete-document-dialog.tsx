@@ -41,13 +41,13 @@ export function DeleteDocumentDialog({
         sileo.error({ 
           title: "Error al eliminar", 
           description: result.errors[0],
-          styles: { description: "text-black" }
+          styles: { description: "text-foreground font-sans text-sm" }
         });
       } else {
         sileo.success({ 
           title: "Eliminado", 
           description: `El documento ${docTitle} ha sido eliminado`,
-          styles: { description: "text-black" }
+          styles: { description: "text-foreground font-sans text-sm" }
         });
         onOpenChange(false);
         onSuccess();

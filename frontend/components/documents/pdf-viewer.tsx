@@ -259,7 +259,7 @@ export function PDFViewer({
         {normalizedFile ? (
           <div className="relative transition-all duration-1000 flex-1 w-full flex justify-center">
             <PDFDocument
-              file={normalizedFile}
+              file={blobState.url}
               onLoadSuccess={onDocumentLoadSuccess}
               loading={
                 <div className="p-20 text-center">

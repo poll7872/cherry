@@ -20,7 +20,7 @@ export function MarkdownRenderer({ content, className = "" }: MarkdownRendererPr
 
   return (
     <div 
-      className={`prose-cherry ${className}`}
+      className={`prose-cherry [overflow-wrap:anywhere] [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_img]:max-w-full ${className}`}
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

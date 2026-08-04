@@ -39,7 +39,7 @@ export function CreateConversationDialog({
       sileo.error({ 
         title: "Error", 
         description: "El título debe tener al menos 3 caracteres",
-        styles: { description: "text-black" }
+        styles: { description: "text-foreground font-sans text-sm" }
       });
       return;
     }
@@ -51,13 +51,13 @@ export function CreateConversationDialog({
         sileo.error({ 
           title: "Error al crear", 
           description: result.errors[0],
-          styles: { description: "text-black" }
+          styles: { description: "text-foreground font-sans text-sm" }
         });
       } else if (result.data) {
         sileo.success({ 
           title: "Éxito", 
           description: "Conversación creada correctamente",
-          styles: { description: "text-black" }
+          styles: { description: "text-foreground font-sans text-sm" }
         });
         onOpenChange(false);
         onSuccess(result.data.id);

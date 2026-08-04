@@ -43,7 +43,7 @@ export function CreateDocumentDialog({
       sileo.success({ 
         title: "Éxito", 
         description: "Documento creado correctamente",
-        styles: { description: "text-black" }
+        styles: { description: "text-foreground font-sans text-sm" }
       });
       onOpenChange(false);
       onSuccess();
@@ -54,7 +54,7 @@ export function CreateDocumentDialog({
         sileo.error({ 
           title: "Error al crear", 
           description: err,
-          styles: { description: "text-black" }
+          styles: { description: "text-foreground font-sans text-sm" }
         });
       });
     }
