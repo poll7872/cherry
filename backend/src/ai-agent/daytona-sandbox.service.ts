@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Daytona, Sandbox } from '@daytona/sdk';
 import { Project } from 'src/projects/entities/project.entity';
+import { LaTeXDocument } from 'src/latex/entities/latex-document.entity';
 
 @Injectable()
 export class DaytonaSandboxService implements OnModuleInit {
@@ -13,10 +14,15 @@ export class DaytonaSandboxService implements OnModuleInit {
   /** In-memory cache: projectId -> live Sandbox object */
   private runningSandboxes: Map<string, Sandbox> = new Map();
 
+  /** In-flight sandbox creation promises to avoid creating two sandboxes concurrently */
+  private creatingSandboxes: Map<string, Promise<Sandbox>> = new Map();
+
   constructor(
     private readonly configService: ConfigService,
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    @InjectRepository(LaTeXDocument)
+    private readonly latexRepository: Repository<LaTeXDocument>,
   ) {}
 
   onModuleInit() {
@@ -61,6 +67,26 @@ export class DaytonaSandboxService implements OnModuleInit {
     }
 
     // 3. Create a fresh sandbox and persist its ID
+    return this.createSandbox(projectId);
+  }
+
+  /**
+   * Creates a sandbox, deduplicating concurrent calls per project so we never
+   * spin up two sandboxes for the same project at once.
+   */
+  private createSandbox(projectId: string): Promise<Sandbox> {
+    if (this.creatingSandboxes.has(projectId)) {
+      return this.creatingSandboxes.get(projectId)!;
+    }
+
+    const creation = this.doCreateSandbox(projectId).finally(() => {
+      this.creatingSandboxes.delete(projectId);
+    });
+    this.creatingSandboxes.set(projectId, creation);
+    return creation;
+  }
+
+  private async doCreateSandbox(projectId: string): Promise<Sandbox> {
     this.logger.log(`Creating new sandbox for project ${projectId}`);
     const sandbox = await this.daytona.create({
       image: 'poll7872/arch-texlive:v3',
@@ -152,6 +178,64 @@ export class DaytonaSandboxService implements OnModuleInit {
       );
       throw error;
     }
+  }
+
+  async deleteFile(projectId: string, path: string): Promise<void> {
+    try {
+      const sandbox = await this.getSandboxForProject(projectId);
+      await sandbox.fs.deleteFile(path);
+    } catch (error) {
+      this.logger.warn(
+        `Could not delete file ${path} in sandbox for project ${projectId}: ${error}`,
+      );
+    }
+  }
+
+  /**
+   * Syncs the project's LaTeX documents (DB, source of truth) into the sandbox
+   * so compilation and AI reads always reflect the latest saved content.
+   * Removes sandbox .tex files that no longer exist in the DB (renames/deletes).
+   */
+  async syncProjectFiles(projectId: string): Promise<void> {
+    const docs = await this.latexRepository.find({
+      where: { projectId },
+    });
+
+    const sandbox = await this.getSandboxForProject(projectId);
+
+    // 1. Upload every DB document
+    for (const doc of docs) {
+      const dirName = doc.title.includes('/')
+        ? doc.title.substring(0, doc.title.lastIndexOf('/'))
+        : null;
+      if (dirName) {
+        await sandbox.process.executeCommand(
+          `mkdir -p ${this.shellQuote(dirName)}`,
+        );
+      }
+      await sandbox.fs.uploadFile(Buffer.from(doc.content), doc.title);
+    }
+
+    // 2. Remove stale .tex files (renames/deletions)
+    const validTitles = new Set(docs.map((d) => d.title));
+    const filesInfo = await sandbox.fs.listFiles('.', { depth: 5 });
+    for (const file of filesInfo) {
+      if (!file.path) continue;
+      const normalized = file.path.replace(/^\.\//, '');
+      if (normalized.endsWith('.tex') && !validTitles.has(normalized)) {
+        try {
+          await sandbox.fs.deleteFile(normalized);
+        } catch (err) {
+          this.logger.warn(
+            `Could not remove stale file ${normalized} from sandbox for project ${projectId}: ${err}`,
+          );
+        }
+      }
+    }
+  }
+
+  private shellQuote(path: string): string {
+    return `'${path.replace(/'/g, `'\\''`)}'`;
   }
 
   /**
