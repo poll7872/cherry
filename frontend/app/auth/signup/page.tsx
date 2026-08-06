@@ -1,8 +1,14 @@
-"use client"
-
+import { redirect } from "next/navigation";
+import { getUser } from "@/actions/auth";
 import { SignupForm } from "@/components/auth/signup-form"
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const user = await getUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
+
   return (
     <main className="relative z-10 flex-1 flex flex-col items-center justify-center p-6 md:p-10 animate-slide-up">
       <div className="w-full max-w-[440px]">
