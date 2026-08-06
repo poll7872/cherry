@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,6 +11,7 @@ import { CreateLatexDocumentDto } from './dto/create-latex-document.dto';
 import { UpdateLatexDocumentDto } from './dto/update-latex-document.dto';
 import { Project } from 'src/projects/entities/project.entity';
 import { User } from 'src/users/entities/user.entity';
+import { DaytonaSandboxService } from 'src/ai-agent/daytona-sandbox.service';
 
 const IEEE_JOURNAL_TEMPLATE = String.raw`\documentclass[journal]{IEEEtran}
 \usepackage[spanish]{babel}
@@ -87,11 +89,14 @@ Resumen corto del paper.
 
 @Injectable()
 export class LatexService {
+  private readonly logger = new Logger(LatexService.name);
+
   constructor(
     @InjectRepository(LaTeXDocument)
     private readonly latexRepository: Repository<LaTeXDocument>,
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    private readonly daytonaSandboxService: DaytonaSandboxService,
   ) {}
 
   getTemplate(type: 'journal' | 'conference' = 'journal'): string {
@@ -122,7 +127,9 @@ export class LatexService {
       projectId,
     });
 
-    return this.latexRepository.save(document);
+    const saved = await this.latexRepository.save(document);
+    this.syncToSandbox(projectId, saved.title, saved.content);
+    return saved;
   }
 
   async findAllByProject(projectId: string, user: User) {
@@ -165,6 +172,7 @@ export class LatexService {
   async update(id: string, dto: UpdateLatexDocumentDto, user: User) {
     const document = await this.findOne(id, user);
 
+    const oldTitle = document.title;
     if (dto.title !== undefined) {
       document.title = dto.title;
     }
@@ -172,12 +180,51 @@ export class LatexService {
       document.content = dto.content;
     }
 
-    return this.latexRepository.save(document);
+    const saved = await this.latexRepository.save(document);
+
+    // Keep the sandbox in sync (background, non-blocking)
+    if (dto.content !== undefined) {
+      this.syncToSandbox(saved.projectId, saved.title, saved.content);
+    }
+    if (dto.title !== undefined && dto.title !== oldTitle) {
+      this.daytonaSandboxService
+        .deleteFile(saved.projectId, oldTitle)
+        .catch((err: unknown) =>
+          this.logger.warn(
+            `Could not remove old sandbox file ${oldTitle}: ${String(err)}`,
+          ),
+        );
+    }
+
+    return saved;
   }
 
   async remove(id: string, user: User) {
     const document = await this.findOne(id, user);
+    const { projectId, title } = document;
     await this.latexRepository.remove(document);
+
+    this.daytonaSandboxService
+      .deleteFile(projectId, title)
+      .catch((err: unknown) =>
+        this.logger.warn(
+          `Could not remove sandbox file ${title}: ${String(err)}`,
+        ),
+      );
+
     return { message: 'Document deleted' };
+  }
+
+  /**
+   * Uploads a document to the sandbox in the background. Failures are logged
+   * but never break the API response: the full sync before compile is the
+   * correctness backstop.
+   */
+  private syncToSandbox(projectId: string, title: string, content: string) {
+    this.daytonaSandboxService
+      .writeFile(projectId, title, content)
+      .catch((err: unknown) =>
+        this.logger.warn(`Sandbox sync failed for ${title}: ${String(err)}`),
+      );
   }
 }

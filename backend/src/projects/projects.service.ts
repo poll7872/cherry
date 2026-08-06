@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -120,7 +121,11 @@ export class ProjectsService {
     return project;
   }
 
-  async getCompiledPdf(id: string, user: User): Promise<Buffer> {
+  async getCompiledPdf(
+    id: string,
+    user: User,
+    entryPoint?: string,
+  ): Promise<Buffer> {
     const project = await this.projectRepository
       .createQueryBuilder('project')
       .leftJoinAndSelect('project.user', 'user')
@@ -133,11 +138,46 @@ export class ProjectsService {
       throw new ForbiddenException('Access denied');
     }
 
-    if (!project.compiledPdfBase64) {
-      throw new NotFoundException('No compiled PDF found for this project.');
+    // Sync DB -> sandbox so the user's latest edits are always compiled
+    await this.daytonaSandboxService.syncProjectFiles(id);
+
+    const filename = await this.resolveEntryPoint(id, entryPoint);
+    const result = await this.daytonaSandboxService.compileLatex(id, filename);
+
+    if (!result.success) {
+      throw new BadRequestException(
+        result.output || 'Error compiling LaTeX project.',
+      );
     }
 
-    return Buffer.from(project.compiledPdfBase64, 'base64');
+    if (!result.pdfBase64) {
+      throw new BadRequestException('PDF file was not generated.');
+    }
+
+    // Cache the fresh PDF for later reads and for the AI flow
+    await this.projectRepository.update(id, {
+      compiledPdfBase64: result.pdfBase64,
+    });
+
+    return Buffer.from(result.pdfBase64, 'base64');
+  }
+
+  private async resolveEntryPoint(
+    projectId: string,
+    entryPoint?: string,
+  ): Promise<string> {
+    if (entryPoint) return entryPoint;
+
+    const mainDoc = await this.latexRepository.findOne({
+      where: { title: 'main.tex', projectId },
+    });
+    if (mainDoc) return 'main.tex';
+
+    const firstDoc = await this.latexRepository.findOne({
+      where: { projectId },
+      order: { updatedAt: 'DESC' },
+    });
+    return firstDoc?.title || 'main.tex';
   }
 
   async update(id: string, updateProjectDto: UpdateProjectDto, user: User) {

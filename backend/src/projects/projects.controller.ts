@@ -5,6 +5,7 @@ import {
   Body,
   Param,
   Delete,
+  Query,
   UseGuards,
   UseInterceptors,
   ClassSerializerInterceptor,
@@ -43,10 +44,15 @@ export class ProjectsController {
   @Get(':id/pdf')
   async getCompiledPdf(
     @Param('id') id: string,
+    @Query('entry') entryPoint: string | undefined,
     @GetUser() user: User,
     @Res() res: Response,
   ) {
-    const pdfBuffer = await this.projectsService.getCompiledPdf(id, user);
+    const pdfBuffer = await this.projectsService.getCompiledPdf(
+      id,
+      user,
+      entryPoint,
+    );
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
