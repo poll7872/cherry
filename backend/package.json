@@ -27,6 +27,7 @@
     "@langchain/langgraph-checkpoint": "^1.0.1",
     "@langchain/langgraph-checkpoint-postgres": "^1.0.1",
     "@langchain/openrouter": "^0.4.5",
+    "langchain": "^1.2.39",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",

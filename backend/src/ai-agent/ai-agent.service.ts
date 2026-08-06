@@ -2,13 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { tool } from '@langchain/core/tools';
 import { z } from 'zod';
-import {
-  createDeepAgent,
-  CompositeBackend,
-  StateBackend,
-  StoreBackend,
-  BackendRuntime,
-} from 'deepagents';
+import { createAgent, createMiddleware, type ReactAgent } from 'langchain';
 //import { ChatGoogle } from '@langchain/google';
 import { ChatOpenRouter } from '@langchain/openrouter';
 import { PostgresSaver } from '@langchain/langgraph-checkpoint-postgres';
@@ -27,11 +21,14 @@ interface ToolCallConfig {
 
 type StreamChunk = {
   content?: string | Array<{ type?: string; text?: string }>;
+  tool_call_id?: string;
 };
+
+const MAX_HISTORY_MESSAGES = 30;
 
 @Injectable()
 export class AiAgentService implements OnModuleInit {
-  private agent: ReturnType<typeof createDeepAgent>;
+  private agent: ReactAgent;
   private checkpointer: PostgresSaver;
 
   constructor(
@@ -67,6 +64,35 @@ export class AiAgentService implements OnModuleInit {
     }
   }
 
+  private async resolveProjectId(
+    config?: ToolCallConfig,
+  ): Promise<string | undefined> {
+    const conversationId = config?.configurable?.thread_id;
+    if (!conversationId) return undefined;
+    return this.getProjectIdFromConversation(conversationId);
+  }
+
+  private async findDocument(
+    projectId: string,
+    documentId: string,
+  ): Promise<LaTeXDocument | null> {
+    let doc = await this.latexRepository.findOne({
+      where: { title: documentId, projectId },
+    });
+
+    if (!doc && this.isValidUUID(documentId)) {
+      try {
+        doc = await this.latexRepository.findOne({
+          where: { id: documentId, projectId },
+        });
+      } catch {
+        // Ignore UUID error, continue to not found
+      }
+    }
+
+    return doc ?? null;
+  }
+
   private async initializeAgent() {
     const databaseUrl = this.configService.get<string>('DATABASE_URL') || '';
 
@@ -75,17 +101,17 @@ export class AiAgentService implements OnModuleInit {
 
     const readLatexDocument = tool(
       async ({ documentId }, config: ToolCallConfig) => {
-        const conversationId = config?.configurable?.thread_id;
-        let projectId: string | undefined = undefined;
-        if (conversationId) {
-          projectId = await this.getProjectIdFromConversation(conversationId);
-        }
+        const projectId = await this.resolveProjectId(config);
 
         if (!projectId) {
           return 'Error: conversationId is required to verify project access.';
         }
 
-        // Try reading from Sandbox first
+        // Read from the database (source of truth) first
+        const doc = await this.findDocument(projectId, documentId);
+        if (doc) return doc.content;
+
+        // Fallback to Sandbox
         const sandboxContent = await this.daytonaService.readFile(
           projectId,
           documentId,
@@ -94,23 +120,7 @@ export class AiAgentService implements OnModuleInit {
           return sandboxContent;
         }
 
-        // Fallback to database
-        let doc = await this.latexRepository.findOne({
-          where: { title: documentId, projectId },
-        });
-
-        if (!doc && this.isValidUUID(documentId)) {
-          try {
-            doc = await this.latexRepository.findOne({
-              where: { id: documentId, projectId },
-            });
-          } catch {
-            // Ignore UUID error, continue to not found
-          }
-        }
-
-        if (!doc) return 'Document not found';
-        return doc.content;
+        return `Error: Document "${documentId}" not found. Use list_latex_documents to see the available documents.`;
       },
       {
         name: 'read_latex_document',
@@ -124,11 +134,7 @@ export class AiAgentService implements OnModuleInit {
 
     const writeLatexDocument = tool(
       async ({ documentId, content }, config: ToolCallConfig) => {
-        const conversationId = config?.configurable?.thread_id;
-        let projectId: string | undefined = undefined;
-        if (conversationId) {
-          projectId = await this.getProjectIdFromConversation(conversationId);
-        }
+        const projectId = await this.resolveProjectId(config);
         if (!projectId) {
           return 'Error: conversationId is required to verify project access.';
         }
@@ -137,19 +143,7 @@ export class AiAgentService implements OnModuleInit {
         await this.daytonaService.writeFile(projectId, documentId, content);
 
         // Keep DB in sync for the frontend
-        let doc = await this.latexRepository.findOne({
-          where: { title: documentId, projectId },
-        });
-
-        if (!doc && this.isValidUUID(documentId)) {
-          try {
-            doc = await this.latexRepository.findOne({
-              where: { id: documentId, projectId },
-            });
-          } catch {
-            // Ignore UUID error
-          }
-        }
+        const doc = await this.findDocument(projectId, documentId);
 
         if (!doc) {
           const newDoc = this.latexRepository.create({
@@ -176,14 +170,73 @@ export class AiAgentService implements OnModuleInit {
       },
     );
 
+    const editLatexDocument = tool(
+      async (
+        { documentId, oldText, newText, replaceAll = false },
+        config: ToolCallConfig,
+      ) => {
+        const projectId = await this.resolveProjectId(config);
+        if (!projectId) {
+          return 'Error: conversationId is required to verify project access.';
+        }
+
+        const doc = await this.findDocument(projectId, documentId);
+        if (!doc) {
+          return `Error: Document "${documentId}" not found. Use list_latex_documents to see the available documents.`;
+        }
+
+        const occurrences = doc.content.split(oldText).length - 1;
+        if (occurrences === 0) {
+          return `Error: The text to replace was not found in "${documentId}". Read the document with read_latex_document to see the current content.`;
+        }
+
+        if (occurrences > 1 && !replaceAll) {
+          return `Error: The text was found ${occurrences} times in "${documentId}". Set replaceAll=true to replace all occurrences, or include more surrounding context in oldText to make it unique.`;
+        }
+
+        const updatedContent = replaceAll
+          ? doc.content.split(oldText).join(newText)
+          : doc.content.replace(oldText, newText);
+
+        doc.content = updatedContent;
+        await this.latexRepository.save(doc);
+        await this.daytonaService.writeFile(
+          projectId,
+          documentId,
+          updatedContent,
+        );
+
+        return `Edited "${documentId}" successfully (${occurrences} occurrence${
+          occurrences > 1 ? 's' : ''
+        } replaced). The document was updated in the database and synced to the sandbox.`;
+      },
+      {
+        name: 'edit_latex_document',
+        description:
+          'Search and replace text inside an existing LaTeX document. Ideal for making targeted changes (e.g. rewriting an abstract) without sending the whole file. Use the document title like "main.tex".',
+        schema: z.object({
+          documentId: z.string(),
+          oldText: z
+            .string()
+            .describe('The exact text to search for inside the document'),
+          newText: z
+            .string()
+            .describe('The replacement text that will replace oldText'),
+          replaceAll: z
+            .boolean()
+            .optional()
+            .describe(
+              'Set to true when oldText appears multiple times and all occurrences should be replaced. Defaults to false.',
+            ),
+        }),
+      },
+    );
+
     const listLatexDocuments = tool(
       async ({ projectId } = {}, config: ToolCallConfig) => {
-        const conversationId = config?.configurable?.thread_id;
         let targetProjectId = projectId;
-
-        if (!targetProjectId && conversationId) {
-          targetProjectId =
-            await this.getProjectIdFromConversation(conversationId);
+        if (!targetProjectId) {
+          targetProjectId = await this.resolveProjectId(config);
         }
 
         if (!targetProjectId) {
@@ -219,16 +272,13 @@ export class AiAgentService implements OnModuleInit {
 
     const compileLatex = tool(
       async ({ filename = 'main.tex' }, config: ToolCallConfig) => {
-        const conversationId = config?.configurable?.thread_id;
-        if (!conversationId) {
-          return 'Error: Uninitialized thread or missing conversationId.';
-        }
-
-        const projectId =
-          await this.getProjectIdFromConversation(conversationId);
+        const projectId = await this.resolveProjectId(config);
         if (!projectId) {
           return 'Error: conversationId is required to verify project access.';
         }
+
+        // Make sure the sandbox reflects the latest saved documents before compiling
+        await this.daytonaService.syncProjectFiles(projectId);
 
         const result = await this.daytonaService.compileLatex(
           projectId,
@@ -295,18 +345,19 @@ Reglas de LaTeX:
 4. Inclusión:
    - Usa \\input{} o \\include{} correctamente desde 'main.tex'.
 
-Herramientas disponibles:
-- read_latex_document
-- write_latex_document
-- list_latex_documents
-- compile_latex
+Herramientas disponibles (usa SOLO estas, no inventes otras):
+- list_latex_documents: lista los documentos del proyecto.
+- read_latex_document: lee el contenido completo de un documento.
+- write_latex_document: escribe o reemplaza el contenido completo de un documento.
+- edit_latex_document: hace un cambio puntual (buscar y reemplazar) dentro de un documento.
+- compile_latex: compila el proyecto a PDF en el sandbox.
 
-Flujo de trabajo:
+Flujo de trabajo recomendado:
 1. Analiza el estado del proyecto con 'list_latex_documents'.
-2. Decide si crear o modificar 'main.tex'.
-3. Genera contenido académico de alta calidad.
-4. Modulariza solo cuando aporte valor.
-5. Mantén siempre coherencia entre archivos.
+2. Lee el documento relevante con 'read_latex_document' antes de modificarlo.
+3. Para cambios puntuales usa 'edit_latex_document' (más eficiente y seguro que reescribir el archivo completo).
+4. Usa 'write_latex_document' para crear documentos nuevos o reemplazar contenido completo.
+5. Tras hacer cambios importantes, compila con 'compile_latex' para verificar que todo funciona.
 `;
 
     /*const model = new ChatGoogle({
@@ -320,20 +371,31 @@ Flujo de trabajo:
       // other params...
     });
 
-    this.agent = createDeepAgent({
+    const trimHistoryMiddleware = createMiddleware({
+      name: 'trim_history',
+      wrapModelCall: async (request, handler) => {
+        if (request.messages.length > MAX_HISTORY_MESSAGES) {
+          return handler({
+            ...request,
+            messages: request.messages.slice(-MAX_HISTORY_MESSAGES),
+          });
+        }
+        return handler(request);
+      },
+    });
+
+    this.agent = createAgent({
       model,
       tools: [
         readLatexDocument,
         writeLatexDocument,
+        editLatexDocument,
         listLatexDocuments,
         compileLatex,
       ],
       systemPrompt,
-      backend: (config: BackendRuntime) =>
-        new CompositeBackend(new StateBackend(config), {
-          '/memories/': new StoreBackend(config),
-        }),
       checkpointer: this.checkpointer,
+      middleware: [trimHistoryMiddleware],
     });
   }
 
@@ -364,10 +426,12 @@ Flujo de trabajo:
         const message = item?.[0] as StreamChunk | undefined;
 
         if (!message) continue;
+        // Skip tool result messages and empty chunks (e.g. tool call only)
+        if (message.tool_call_id || typeof message.content !== 'string')
+          continue;
+        if (!message.content) continue;
 
-        if (typeof message.content === 'string') {
-          yield message.content;
-        }
+        yield message.content;
       }
     } catch (error) {
       console.error('Error invoking agent stream:', error);
