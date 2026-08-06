@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Daytona, Sandbox } from '@daytonaio/sdk';
+import { Daytona, Sandbox } from '@daytona/sdk';
 import { Project } from 'src/projects/entities/project.entity';
 
 @Injectable()

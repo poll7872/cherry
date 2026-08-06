@@ -9,7 +9,8 @@ import {
   StoreBackend,
   BackendRuntime,
 } from 'deepagents';
-import { ChatGoogle } from '@langchain/google';
+//import { ChatGoogle } from '@langchain/google';
+import { ChatOpenRouter } from '@langchain/openrouter';
 import { PostgresSaver } from '@langchain/langgraph-checkpoint-postgres';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -308,9 +309,15 @@ Flujo de trabajo:
 5. Mantén siempre coherencia entre archivos.
 `;
 
-    const model = new ChatGoogle({
+    /*const model = new ChatGoogle({
       apiKey: this.configService.get<string>('GOOGLE_API_KEY'),
       model: 'gemini-2.5-flash',
+    });*/
+
+    const model = new ChatOpenRouter({
+      model: 'google/gemini-2.5-flash-lite',
+      apiKey: this.configService.get<string>('OPENROUTER_API_KEY'),
+      // other params...
     });
 
     this.agent = createDeepAgent({

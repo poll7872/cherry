@@ -20,12 +20,13 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@daytonaio/sdk": "^0.159.0",
-    "@langchain/core": "^1.1.39",
+    "@daytona/sdk": "^0.203.0",
+    "@langchain/core": "^1.2.4",
     "@langchain/google": "^0.1.10",
     "@langchain/langgraph": "^1.2.8",
     "@langchain/langgraph-checkpoint": "^1.0.1",
     "@langchain/langgraph-checkpoint-postgres": "^1.0.1",
+    "@langchain/openrouter": "^0.4.5",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
