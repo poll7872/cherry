@@ -8,7 +8,6 @@ import {
   Settings,
   MoreVertical,
   Trash2,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Document, Conversation } from "@/lib/schemas";
@@ -47,13 +46,8 @@ export function WorkspaceSidebar({
 }: WorkspaceSidebarProps) {
   const { activeTab, isSidebarOpen, setActiveTab, setEditorMode } =
     useUIStore();
-  const {
-    activeDocId,
-    activeConvId,
-    setActiveDocId,
-    setActiveConvId,
-    setMessages,
-  } = useWorkspaceStore();
+  const { activeDocId, activeConvId, setActiveDocId, setActiveConvId } =
+    useWorkspaceStore();
 
   // TanStack Queries
   const { data: documents = [], isLoading: isLoadingDocs } =
@@ -83,7 +77,7 @@ export function WorkspaceSidebar({
           href="/dashboard"
           className="flex justify-center mb-4 items-center hover:opacity-80 transition-opacity"
         >
-          <Logo className="h-6 w-auto" />
+          <Logo className="h-12 w-24" />
         </Link>
         {/* Top Switcher Rail */}
         <div className="mb-10 px-1">
