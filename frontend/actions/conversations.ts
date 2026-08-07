@@ -46,6 +46,7 @@ export async function getConversation(
       headers: {
         Authorization: `Bearer ${token}`,
       },
+      cache: "no-store",
     });
 
     if (!response.ok) return null;

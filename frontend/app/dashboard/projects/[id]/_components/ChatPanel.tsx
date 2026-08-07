@@ -3,7 +3,7 @@
 import { Send, Loader2, Cherry } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useWorkspaceStore } from "@/lib/store/use-workspace-store";
 import { useConversationQuery } from "@/hooks/use-workspace-queries";
 import { createConversation } from "@/actions/conversations";
@@ -29,11 +29,17 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
   // TanStack Query
   const { data: conversation } = useConversationQuery(activeConvId);
 
-  // Sincronizar mensajes cuando cambie la conversación activa
+  // Ref para leer isSending sin reactivar el effect (evita sobrescribir con datos obsoletos)
+  const isSendingRef = useRef(isSending);
   useEffect(() => {
-    if (!conversation || isSending) return;
+    isSendingRef.current = isSending;
+  }, [isSending]);
+
+  // Sincronizar mensajes solo cuando la query devuelve datos nuevos (no al toggle de isSending)
+  useEffect(() => {
+    if (!conversation || isSendingRef.current) return;
     setMessages(conversation.messages || []);
-  }, [conversation, setMessages, isSending]);
+  }, [conversation, setMessages]);
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -61,6 +67,15 @@ export function ChatPanel({ projectId }: ChatPanelProps) {
 
     setMessageInput("");
     await sendMessage(contentToSend);
+
+    // Refrescar la caché de la conversación con el mensaje persistido del asistente.
+    // Se lee del store porque en una conversación recién creada la closure aún tiene null.
+    const currentConvId = useWorkspaceStore.getState().activeConvId;
+    if (currentConvId) {
+      queryClient.invalidateQueries({
+        queryKey: ["conversation", currentConvId],
+      });
+    }
   };
 
   return (

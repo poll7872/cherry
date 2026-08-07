@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { Message } from "@/lib/schemas";
 import { updateDocument } from "@/actions/documents";
-import { getConversation } from "@/actions/conversations";
 import { compileProject } from "@/actions/compiler";
 import { sileo } from "sileo";
 
@@ -146,9 +145,6 @@ export const useWorkspaceStore = create<WorkspaceState>()((set, get) => ({
           ),
         }));
       }
-
-      const updatedConv = await getConversation(activeConvId);
-      if (updatedConv) set({ messages: updatedConv.messages || [] });
     } catch {
       sileo.error({
         title: "Error",
