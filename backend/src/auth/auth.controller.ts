@@ -1,10 +1,21 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { AuthGuard } from './auth.guard';
 
 @Controller('auth')
@@ -15,6 +26,34 @@ export class AuthController {
   @UseGuards(AuthGuard)
   getMe(@Req() req: Request & { user: { id: string } }) {
     return this.authService.getUser(req.user.id);
+  }
+
+  @Patch('me')
+  @UseGuards(AuthGuard)
+  updateMe(
+    @Req() req: Request & { user: { id: string } },
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(req.user.id, dto);
+  }
+
+  @Delete('me')
+  @UseGuards(AuthGuard)
+  deleteMe(@Req() req: Request & { user: { id: string } }) {
+    return this.authService.deleteAccount(req.user.id);
+  }
+
+  @Post('change-password')
+  @UseGuards(AuthGuard)
+  changePassword(
+    @Req() req: Request & { user: { id: string } },
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.authService.changePassword(
+      req.user.id,
+      dto.currentPassword,
+      dto.newPassword,
+    );
   }
 
   @Post('register')

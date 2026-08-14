@@ -4,11 +4,16 @@ import { AuthService } from './auth.service';
 import { UsersModule } from 'src/users/users.module';
 import { JwtModule } from '@nestjs/jwt';
 import { EmailModule } from 'src/email/email.module';
+import { AiAgentModule } from 'src/ai-agent/ai-agent.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Project } from 'src/projects/entities/project.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
     UsersModule,
+    TypeOrmModule.forFeature([Project]),
+    AiAgentModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

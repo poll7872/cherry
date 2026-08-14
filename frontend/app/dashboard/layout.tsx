@@ -13,5 +13,5 @@ export default async function DashboardLayout({
     redirect("/auth/login");
   }
 
-  return <DashboardShell>{children}</DashboardShell>;
+  return <DashboardShell theme={user.theme}>{children}</DashboardShell>;
 }

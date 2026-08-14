@@ -6,9 +6,14 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Project } from 'src/projects/entities/project.entity';
+import { DaytonaSandboxService } from 'src/ai-agent/daytona-sandbox.service';
 import bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { EmailService } from 'src/email/email.service';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +21,9 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private emailService: EmailService,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
+    private readonly daytonaSandboxService: DaytonaSandboxService,
   ) {}
 
   async register(name: string, email: string, password: string) {
@@ -124,6 +132,64 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-    return { email: user.email, name: user.name };
+    return { email: user.email, name: user.name, theme: user.theme };
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (dto.name !== undefined) {
+      user.name = dto.name;
+    }
+    if (dto.theme !== undefined) {
+      user.theme = dto.theme;
+    }
+
+    await this.usersService.save(user);
+    return { email: user.email, name: user.name, theme: user.theme };
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await this.usersService.save(user);
+
+    return { message: 'Password updated successfully' };
+  }
+
+  async deleteAccount(userId: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const projects = await this.projectRepository.find({
+      where: { user: { id: userId } },
+    });
+
+    await Promise.all(
+      projects.map((project) =>
+        this.daytonaSandboxService.deleteSandbox(project.id),
+      ),
+    );
+
+    await this.usersService.remove(user);
+    return { message: 'Account deleted successfully' };
   }
 }

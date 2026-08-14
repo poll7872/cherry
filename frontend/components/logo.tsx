@@ -13,7 +13,7 @@ export function Logo({ className }: LogoProps) {
         alt="Cherry"
         width={30}
         height={30}
-        className={cn("dark:hidden", className)}
+        className={cn("h-28 w-28 dark:hidden", className)}
         priority
       />
       <Image
@@ -21,7 +21,7 @@ export function Logo({ className }: LogoProps) {
         alt="Cherry"
         width={30}
         height={30}
-        className={cn("hidden dark:block", className)}
+        className={cn("h-28 w-28 hidden dark:block", className)}
         priority
       />
     </>

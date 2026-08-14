@@ -1,12 +1,15 @@
 "use client";
 
 import { DashboardNav } from "@/components/dashboard/dashboard-nav";
+import { ThemeSetter } from "@/components/dashboard/theme-setter";
 import { usePathname } from "next/navigation";
 
 export function DashboardShell({
   children,
+  theme,
 }: {
   children: React.ReactNode;
+  theme?: string | null;
 }) {
   const pathname = usePathname();
   // Detect if we are in a project workspace by checking for projects/[id] pattern
@@ -15,6 +18,7 @@ export function DashboardShell({
   if (isProjectWorkspace) {
     return (
       <div className="h-screen overflow-hidden bg-background relative">
+        <ThemeSetter theme={theme} />
         <main className="h-full overflow-hidden relative z-10">
           {children}
         </main>
@@ -24,6 +28,7 @@ export function DashboardShell({
 
   return (
     <div className="relative min-h-screen bg-background font-sans antialiased overflow-hidden flex flex-col">
+      <ThemeSetter theme={theme} />
       {/* GLOBAL BACKGROUND BRAND MARK */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none z-0">
         <h1 className="text-[25vw] font-black leading-none tracking-tighter text-white/1.5 uppercase italic">

@@ -122,17 +122,21 @@ export function DashboardNav() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-border" />
-              <DropdownMenuItem className="cursor-pointer py-2.5 rounded-xl focus:bg-primary/10 focus:text-primary transition-colors">
-                <User className="mr-3 h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">
-                  Perfil
-                </span>
+              <DropdownMenuItem asChild className="cursor-pointer py-2.5 rounded-xl focus:bg-primary/10 focus:text-primary transition-colors">
+                <Link href="/dashboard/perfil" className="flex items-center">
+                  <User className="mr-3 h-4 w-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    Perfil
+                  </span>
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer py-2.5 rounded-xl focus:bg-primary/10 focus:text-primary transition-colors">
-                <Settings className="mr-3 h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">
-                  Ajustes
-                </span>
+              <DropdownMenuItem asChild className="cursor-pointer py-2.5 rounded-xl focus:bg-primary/10 focus:text-primary transition-colors">
+                <Link href="/dashboard/ajustes" className="flex items-center">
+                  <Settings className="mr-3 h-4 w-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    Ajustes
+                  </span>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-border" />
               <DropdownMenuItem

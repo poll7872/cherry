@@ -57,6 +57,7 @@ export const LoginResponseSchema = z.object({
 export const UserResponseSchema = z.object({
   email: z.email(),
   name: z.string(),
+  theme: z.string().nullable().optional(),
 });
 
 export const ErrorResponseSchema = z.object({
@@ -64,6 +65,37 @@ export const ErrorResponseSchema = z.object({
   error: z.string(),
   statusCode: z.number(),
 });
+
+// Perfil
+export const UpdateProfileSchema = z.object({
+  name: z
+    .string()
+    .min(2, { message: "El nombre debe tener al menos 2 caracteres" })
+    .trim(),
+});
+
+export type UpdateProfileFormData = z.infer<typeof UpdateProfileSchema>;
+
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z
+      .string()
+      .min(1, { message: "La contraseña actual es requerida" }),
+    password: z
+      .string()
+      .min(8, { message: "La contraseña debe tener al menos 8 caracteres" }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
+
+export type ChangePasswordFormData = z.infer<typeof ChangePasswordSchema>;
+
+export const ThemeSchema = z.enum(["light", "dark"]);
+
+export type Theme = z.infer<typeof ThemeSchema>;
 
 // Proyectos
 export const ProjectSchema = z.object({

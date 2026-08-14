@@ -5,7 +5,6 @@ import {
   Plus,
   MessageSquareText,
   Library,
-  Settings,
   MoreVertical,
   Trash2,
 } from "lucide-react";
@@ -77,7 +76,7 @@ export function WorkspaceSidebar({
           href="/dashboard"
           className="flex justify-center mb-4 items-center hover:opacity-80 transition-opacity"
         >
-          <Logo className="h-12 w-24" />
+          <Logo className="h-10 w-24" />
         </Link>
         {/* Top Switcher Rail */}
         <div className="mb-10 px-1">
@@ -106,18 +105,6 @@ export function WorkspaceSidebar({
             >
               <Library className="h-4 w-4" />
             </Button>
-            <Button
-              onClick={() => setActiveTab("settings")}
-              variant="ghost"
-              className={cn(
-                "flex-1 h-8 rounded-lg transition-all duration-500 flex justify-center items-center",
-                activeTab === "settings"
-                  ? "bg-primary text-primary-foreground shadow-lg"
-                  : "text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5",
-              )}
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
           </div>
         </div>
 
@@ -126,9 +113,7 @@ export function WorkspaceSidebar({
             ? "Biblioteca"
             : activeTab === "files"
               ? "Biblioteca"
-              : activeTab === "chat"
-                ? "Asistente Cherry"
-                : "Zenith Setup"}
+              : "Asistente Cherry"}
         </h2>
 
         <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth">
@@ -136,7 +121,7 @@ export function WorkspaceSidebar({
             <div className="space-y-6">
               <Button
                 onClick={() => setIsCreateDocOpen(true)}
-                className="w-full justify-start gap-4 rounded-xl h-10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[10px] font-black uppercase tracking-[0.2em] border border-border transition-all group"
+                className="w-full justify-start gap-4 rounded-xl h-10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] border border-border transition-all group"
               >
                 <Plus className="h-3 w-3 text-primary group-hover:scale-125 transition-transform" />
                 Archivo
@@ -209,7 +194,7 @@ export function WorkspaceSidebar({
             <div className="space-y-6">
               <Button
                 onClick={() => setIsCreateConvOpen(true)}
-                className="w-full justify-start gap-4 rounded-xl h-10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[10px] font-black uppercase tracking-[0.2em] border border-border transition-all group"
+                className="w-full justify-start gap-4 rounded-xl h-10 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-[10px] text-muted-foreground uppercase tracking-[0.2em] border border-border transition-all group"
               >
                 <Plus className="h-3 w-3 text-primary group-hover:scale-125 transition-transform" />
                 Nuevo chat

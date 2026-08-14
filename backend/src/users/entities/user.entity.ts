@@ -28,6 +28,9 @@ export class User {
   @Column({ default: false })
   isEmailVerified: boolean;
 
+  @Column({ type: 'varchar', nullable: true })
+  theme: string | null;
+
   @Exclude()
   @Column({ type: 'varchar', nullable: true })
   emailVerificationToken: string | null;

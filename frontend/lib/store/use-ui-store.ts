@@ -3,10 +3,10 @@ import { persist } from 'zustand/middleware';
 
 interface UIState {
   isSidebarOpen: boolean;
-  activeTab: 'files' | 'chat' | 'settings';
+  activeTab: 'files' | 'chat';
   editorMode: boolean;
   toggleSidebar: () => void;
-  setActiveTab: (tab: 'files' | 'chat' | 'settings') => void;
+  setActiveTab: (tab: 'files' | 'chat') => void;
   setEditorMode: (mode: boolean) => void;
 }
 
@@ -22,6 +22,14 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: 'zenith-ui-storage',
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as Record<string, unknown>;
+        if (state.activeTab === 'settings') {
+          return { ...state, activeTab: 'chat' } as UIState;
+        }
+        return state as unknown as UIState;
+      },
     }
   )
 );

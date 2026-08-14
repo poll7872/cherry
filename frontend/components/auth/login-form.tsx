@@ -35,7 +35,7 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-10 w-full", className)} {...props}>
-      <div className="flex flex-col items-start gap-6">
+      <div className="flex flex-col items-start gap-2">
         <Logo />
         <div className="space-y-3">
           <h1 className="text-5xl font-black text-foreground tracking-tighter leading-none">

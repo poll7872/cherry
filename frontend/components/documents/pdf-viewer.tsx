@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { Document as PDFDocument, Page as PDFPage, pdfjs } from "react-pdf";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,59 +44,40 @@ export function PDFViewer({
 
   const normalizedFile = useMemo(() => {
     if (!file) return null;
-    if (file instanceof Uint8Array) return { data: file };
+    if (file instanceof Uint8Array) return { data: new Uint8Array(file) };
+    if (
+      typeof file === "object" &&
+      "data" in file &&
+      file.data instanceof Uint8Array
+    ) {
+      return { data: new Uint8Array(file.data) };
+    }
     return file;
   }, [file]);
 
-  const [blobState, setBlobState] = useState({
-    file: null as PDFFile,
-    url: "",
-  });
-
-  // Patrón de sincronización de props de React:
-  // En lugar de useEffect para el setState, sincronizamos durante el render
-  if (file !== blobState.file) {
-    let newUrl = "";
-    if (typeof normalizedFile === "string") {
-      newUrl = normalizedFile;
-    } else if (
-      normalizedFile &&
-      typeof normalizedFile === "object" &&
-      "data" in normalizedFile
-    ) {
-      const blob = new Blob([normalizedFile.data.buffer as ArrayBuffer], {
-        type: "application/pdf",
-      });
-      newUrl = URL.createObjectURL(blob);
+  // Crea una URL temporal solo para acciones puntuales (download/print) y la revoca
+  // tras su uso. Copia SIEMPRE desde `file` (la prop original, intacta): la copia
+  // de `normalizedFile` queda detached por pdfjs al renderizar.
+  const getTempPdfUrl = useCallback((): string => {
+    if (typeof file === "string") return file;
+    if (file instanceof Blob) return URL.createObjectURL(file);
+    if (file instanceof Uint8Array) {
+      return URL.createObjectURL(
+        new Blob([file.slice()], { type: "application/pdf" }),
+      );
     }
-
-    // Revocar el URL anterior si existía uno local
     if (
-      blobState.url &&
-      typeof blobState.file !== "string" &&
-      blobState.file !== null
+      file &&
+      typeof file === "object" &&
+      "data" in file &&
+      file.data instanceof Uint8Array
     ) {
-      URL.revokeObjectURL(blobState.url);
+      return URL.createObjectURL(
+        new Blob([file.data.slice()], { type: "application/pdf" }),
+      );
     }
-
-    setBlobState({ file, url: newUrl });
-  }
-
-  // Ref para asegurar que el efecto de limpieza siempre tenga el valor más reciente sin ser una dependencia
-  const blobStateRef = useRef(blobState);
-  useEffect(() => {
-    blobStateRef.current = blobState;
-  }, [blobState]);
-
-  // Solo para limpieza en desmontaje final
-  useEffect(() => {
-    return () => {
-      const { file: f, url: u } = blobStateRef.current;
-      if (u && typeof f !== "string" && f !== null) {
-        URL.revokeObjectURL(u);
-      }
-    };
-  }, []);
+    return "";
+  }, [file]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -110,26 +91,32 @@ export function PDFViewer({
   };
 
   const handleDownload = useCallback(() => {
-    if (!blobState.url) return;
+    if (!normalizedFile) return;
+    const url = getTempPdfUrl();
+    if (!url) return;
     const link = document.createElement("a");
-    link.href = blobState.url;
+    link.href = url;
     link.download = "cherry_research.pdf";
     link.click();
-  }, [blobState.url]);
+    if (typeof file !== "string") URL.revokeObjectURL(url);
+  }, [normalizedFile, file, getTempPdfUrl]);
 
   const handlePrint = useCallback(() => {
-    if (!blobState.url) return;
+    if (!normalizedFile) return;
+    const url = getTempPdfUrl();
+    if (!url) return;
     const iframe = document.createElement("iframe");
     iframe.style.display = "none";
-    iframe.src = blobState.url;
+    iframe.src = url;
     document.body.appendChild(iframe);
     iframe.onload = () => {
       iframe.contentWindow?.print();
       setTimeout(() => {
         document.body.removeChild(iframe);
+        if (typeof file !== "string") URL.revokeObjectURL(url);
       }, 2000);
     };
-  }, [blobState.url]);
+  }, [normalizedFile, file, getTempPdfUrl]);
 
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
@@ -259,7 +246,7 @@ export function PDFViewer({
         {normalizedFile ? (
           <div className="relative transition-all duration-1000 flex-1 w-full flex justify-center">
             <PDFDocument
-              file={blobState.url}
+              file={normalizedFile}
               onLoadSuccess={onDocumentLoadSuccess}
               loading={
                 <div className="p-20 text-center">

@@ -18,6 +18,10 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
+  async remove(user: User) {
+    return this.userRepository.remove(user);
+  }
+
   async findByEmail(email: string) {
     return this.userRepository.findOne({ where: { email } });
   }

@@ -1,13 +1,14 @@
 "use client";
 
+import { Suspense } from "react";
+
 import { VerifyEmailForm } from "@/components/auth/verify-email-form";
 import { Logo } from "@/components/logo";
 import { useSearchParams } from "next/navigation";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
-  console.log("desde verify-email token: ", token);
 
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
@@ -21,3 +22,16 @@ export default function VerifyEmailPage() {
   );
 }
 
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-svh items-center justify-center bg-muted">
+          <Logo />
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
+  );
+}

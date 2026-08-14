@@ -117,6 +117,86 @@ Content-Type: application/json
 }
 ```
 
+### Get Current User (Requiere Auth)
+
+```http
+GET /auth/me
+Authorization: Bearer <token>
+```
+
+**Response:**
+
+```json
+{
+  "email": "user@example.com",
+  "name": "John Doe",
+  "theme": "light"
+}
+```
+
+### Update Current User (Requiere Auth)
+
+```http
+PATCH /auth/me
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "Jane Doe",
+  "theme": "dark"
+}
+```
+
+Ambos campos son opcionales (`name` y `theme` con valores `light` | `dark`).
+
+**Response:**
+
+```json
+{
+  "email": "user@example.com",
+  "name": "Jane Doe",
+  "theme": "dark"
+}
+```
+
+### Change Password (Requiere Auth)
+
+```http
+POST /auth/change-password
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "currentPassword": "securepassword123",
+  "newPassword": "newsecurepassword456"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Password updated successfully"
+}
+```
+
+### Delete Account (Requiere Auth)
+
+```http
+DELETE /auth/me
+Authorization: Bearer <token>
+```
+
+Elimina la cuenta, sus proyectos (incluyendo los sandboxes Daytona), documentos y conversaciones de forma permanente.
+
+**Response:**
+
+```json
+{
+  "message": "Account deleted successfully"
+}
+```
+
 ---
 
 ## 2. Projects (Requiere Auth)
