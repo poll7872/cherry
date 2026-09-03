@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { sileo } from "sileo";
 import { login } from "@/actions/auth";
+import { DEMO_EMAIL, DEMO_MODE, DEMO_PASSWORD } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -15,6 +16,8 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const [state, action, pending] = useActionState(login, undefined);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!state) return;
@@ -32,6 +35,11 @@ export function LoginForm({
       );
     }
   }, [state]);
+
+  const handleFillDemo = () => {
+    if (emailRef.current) emailRef.current.value = DEMO_EMAIL;
+    if (passwordRef.current) passwordRef.current.value = DEMO_PASSWORD;
+  };
 
   return (
     <div className={cn("flex flex-col gap-10 w-full", className)} {...props}>
@@ -63,6 +71,7 @@ export function LoginForm({
                 Email
               </FieldLabel>
               <Input
+                ref={emailRef}
                 id="email"
                 name="email"
                 type="email"
@@ -88,6 +97,7 @@ export function LoginForm({
                 </Link>
               </div>
               <Input
+                ref={passwordRef}
                 id="password"
                 name="password"
                 type="password"
@@ -108,6 +118,27 @@ export function LoginForm({
           </FieldGroup>
         </form>
       </div>
+
+      {DEMO_MODE && (
+        <div className="glass-panel rounded-2xl px-5 py-4 flex items-center justify-between gap-4">
+          <div className="space-y-1 min-w-0">
+            <p className="text-xs font-bold text-muted-foreground flex items-center gap-2">
+              <span className="w-1 h-1 bg-primary rounded-full" />
+              Cuenta de prueba
+            </p>
+            <p className="text-xs text-muted-foreground/70 font-mono">
+              {DEMO_EMAIL} &middot; {DEMO_PASSWORD}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleFillDemo}
+            className="text-xs font-bold text-primary hover:text-primary/80 transition-colors shrink-0"
+          >
+            Rellenar
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-col items-start gap-4">
         <div className="h-px w-12 bg-border" />

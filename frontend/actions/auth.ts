@@ -119,22 +119,10 @@ export async function signup(
   }
 }
 
-export async function login(
-  _prevState: FormState,
-  formData: FormData,
+async function createSession(
+  email: string,
+  password: string,
 ): Promise<ActionState> {
-  const validatedFields = LoginSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
-  });
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.issues.map((issue) => issue.message),
-      success: "",
-    };
-  }
-
   try {
     const req = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
@@ -142,8 +130,8 @@ export async function login(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: validatedFields.data.email,
-        password: validatedFields.data.password,
+        email,
+        password,
       }),
     });
 
@@ -177,6 +165,28 @@ export async function login(
   }
 
   redirect("/dashboard");
+}
+
+export async function login(
+  _prevState: FormState,
+  formData: FormData,
+): Promise<ActionState> {
+  const validatedFields = LoginSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.issues.map((issue) => issue.message),
+      success: "",
+    };
+  }
+
+  return createSession(
+    validatedFields.data.email,
+    validatedFields.data.password,
+  );
 }
 
 export async function forgotPassword(
