@@ -10,7 +10,10 @@ export const typeOrmConfig = (
   username: configService.get('DATABASE_USER'),
   password: configService.get('DATABASE_PASS'),
   database: configService.get('DATABASE_NAME'),
-  ssl: false,
+  ssl:
+    configService.get('NODE_ENV') === 'production'
+      ? { rejectUnauthorized: false }
+      : false,
   logging: false,
   entities: [__dirname + '/../**/*.entity{.js,.ts}'],
   synchronize: true, // !SUPER IMPORTANTE! cambiar a false en producción
