@@ -127,7 +127,10 @@ async function main(): Promise<void> {
     username: process.env.DATABASE_USER,
     password: process.env.DATABASE_PASS,
     database: process.env.DATABASE_NAME,
-    ssl: false,
+    ssl:
+      process.env.NODE_ENV === 'production'
+        ? { rejectUnauthorized: false }
+        : false,
     logging: false,
     entities: [__dirname + '/../**/*.entity{.js,.ts}'],
     // Igual que la app: garantiza tablas en una BD limpia
