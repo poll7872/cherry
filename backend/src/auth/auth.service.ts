@@ -4,6 +4,7 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from 'src/users/users.service';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,7 +25,15 @@ export class AuthService {
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
     private readonly daytonaSandboxService: DaytonaSandboxService,
+    private readonly configService: ConfigService,
   ) {}
+
+  private getFrontendBaseUrl(): string {
+    return (
+      this.configService.get<string>('FRONTEND_URL') ||
+      'http://localhost:3001'
+    );
+  }
 
   async register(name: string, email: string, password: string) {
     const existingUser = await this.usersService.findByEmail(email);
@@ -43,7 +52,7 @@ export class AuthService {
       emailVerificationExpires: new Date(Date.now() + 1000 * 60 * 60), //1H
     });
 
-    const link = `http://localhost:3001/auth/verify-email?token=${verificationToken}`;
+    const link = `${this.getFrontendBaseUrl()}/auth/verify-email?token=${verificationToken}`;
     await this.emailService.sendVerificationEmail(user.email, link);
 
     return {
@@ -102,7 +111,7 @@ export class AuthService {
     await this.usersService.save(user);
 
     //Aqui luego enviaremos un email con Resend
-    const resetLink = `http://localhost:3001/auth/reset-password?token=${token}`;
+    const resetLink = `${this.getFrontendBaseUrl()}/auth/reset-password?token=${token}`;
     await this.emailService.sendPasswordResetEmail(user.email, resetLink);
     return {
       message: 'If the email exists, a reset link was sent',
