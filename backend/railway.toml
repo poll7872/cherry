@@ -1,6 +1,6 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "pnpm install --frozen-lockfile && pnpm run build"
+buildCommand = "pnpm install --frozen-lockfile --prod=false && pnpm run build"
 
 [deploy]
 startCommand = "pnpm run start:prod"
