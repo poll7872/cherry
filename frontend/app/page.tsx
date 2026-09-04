@@ -1,7 +1,12 @@
-export default function Home() {
-  return (
-    <main>
-      <h1>Welcome to Cherry</h1>
-    </main>
-  );
+import { redirect } from "next/navigation";
+import { getUser } from "@/actions/auth";
+
+export default async function Home() {
+  const user = await getUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
+
+  redirect("/auth/login");
 }

@@ -49,11 +49,11 @@ export function SignupForm({
   }, [state])
 
   return (
-    <div className={cn("flex flex-col gap-10 w-full", className)} {...props}>
-      <div className="flex flex-col items-start gap-6">
-        <Logo />
+    <div className={cn("flex flex-col gap-8 w-full", className)} {...props}>
+      <div className="flex flex-col items-start gap-4">
+        <Logo className="h-20 w-20" />
         <div className="space-y-3">
-          <h1 className="text-5xl font-black text-foreground tracking-tighter leading-none">
+          <h1 className="text-4xl font-black text-foreground tracking-tighter leading-none">
             Únete a <span className="text-primary italic">Cherry</span>
           </h1>
           <p className="text-sm text-muted-foreground font-sans max-w-[340px] leading-relaxed">
