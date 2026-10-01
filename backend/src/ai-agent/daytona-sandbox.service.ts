@@ -35,10 +35,18 @@ export class DaytonaSandboxService implements OnModuleInit {
   }
 
   async getSandboxForProject(projectId: string): Promise<Sandbox> {
-    // 1. In-memory cache hit
+    // 1. In-memory cache hit — assert it is actually running before reusing it
     if (this.runningSandboxes.has(projectId)) {
       this.logger.debug(`Cache hit for project ${projectId}`);
-      return this.runningSandboxes.get(projectId)!;
+      const cached = this.runningSandboxes.get(projectId)!;
+      if (await this.ensureSandboxStarted(cached)) {
+        return cached;
+      }
+      // Sandbox was auto-stopped/archived while cached — drop it and rebuild below
+      this.logger.warn(
+        `Cached sandbox for project ${projectId} is not running, resuming it.`,
+      );
+      this.runningSandboxes.delete(projectId);
     }
 
     // 2. Check the DB for a previously persisted sandbox
@@ -53,11 +61,23 @@ export class DaytonaSandboxService implements OnModuleInit {
       try {
         const sandbox = await this.daytona.get(project.sandboxId);
 
-        // Wake it up if it was paused
-        await sandbox.start();
+        // >300s to also cover restoring an archived sandbox from object storage
+        if (await this.ensureSandboxStarted(sandbox, 300)) {
+          this.runningSandboxes.set(projectId, sandbox);
+          return sandbox;
+        }
 
-        this.runningSandboxes.set(projectId, sandbox);
-        return sandbox;
+        // Exists but cannot be started (error state, restore timeout, …) — recreate
+        this.logger.warn(
+          `Sandbox ${project.sandboxId} could not be resumed, deleting it and creating a new one.`,
+        );
+        try {
+          await sandbox.delete();
+        } catch (deleteErr) {
+          this.logger.warn(
+            `Could not delete unreachable sandbox ${project.sandboxId}: ${deleteErr}`,
+          );
+        }
       } catch (err) {
         // The sandbox no longer exists in Daytona (e.g. expired) — fall through to create a new one
         this.logger.warn(
@@ -68,6 +88,32 @@ export class DaytonaSandboxService implements OnModuleInit {
 
     // 3. Create a fresh sandbox and persist its ID
     return this.createSandbox(projectId);
+  }
+
+  /**
+   * Verifies a sandbox is actually running, starting it if it was stopped,
+   * paused or archived. Returns false when the sandbox cannot be resumed so
+   * the caller can fall back to creating a fresh one.
+   */
+  private async ensureSandboxStarted(
+    sandbox: Sandbox,
+    timeout: number = 180,
+  ): Promise<boolean> {
+    try {
+      await sandbox.refreshData();
+      if (sandbox.state !== 'started') {
+        this.logger.log(
+          `Starting sandbox ${sandbox.id} (state=${sandbox.state})…`,
+        );
+        await sandbox.start(timeout);
+      }
+      return true;
+    } catch (error) {
+      this.logger.warn(
+        `Could not resume sandbox ${sandbox.id}: ${error instanceof Error ? error.message : error}`,
+      );
+      return false;
+    }
   }
 
   /**
@@ -88,9 +134,14 @@ export class DaytonaSandboxService implements OnModuleInit {
 
   private async doCreateSandbox(projectId: string): Promise<Sandbox> {
     this.logger.log(`Creating new sandbox for project ${projectId}`);
-    const sandbox = await this.daytona.create({
-      image: 'poll7872/arch-texlive:v3',
-    });
+    const sandbox = await this.daytona.create(
+      {
+        image: 'poll7872/arch-texlive:v3',
+        autoStopInterval: 120, // 2h idle before auto-stop (default is 15 min)
+        autoDeleteInterval: -1, // never auto-delete (keeps the project filesystem)
+      },
+      { timeout: 300 }, // cover building the snapshot from the texlive image
+    );
 
     // Persist the sandbox ID so we never create a second one for this project
     await this.projectRepository.update(projectId, {
@@ -101,15 +152,41 @@ export class DaytonaSandboxService implements OnModuleInit {
     return sandbox;
   }
 
+  /**
+   * Resolves the sandbox for a project and runs an operation against it.
+   * If the operation fails while the sandbox is still cached, the cache is
+   * invalidated and the operation retried once against a freshly resolved
+   * sandbox (which restarts or recreates it as needed).
+   */
+  private async withSandbox<T>(
+    projectId: string,
+    operation: (sandbox: Sandbox) => Promise<T>,
+  ): Promise<T> {
+    let sandbox = await this.getSandboxForProject(projectId);
+    try {
+      return await operation(sandbox);
+    } catch (error) {
+      if (this.runningSandboxes.has(projectId)) {
+        this.logger.warn(
+          `Sandbox operation failed for project ${projectId}, invalidating cache and retrying once: ${error instanceof Error ? error.message : error}`,
+        );
+        this.runningSandboxes.delete(projectId);
+        sandbox = await this.getSandboxForProject(projectId);
+        return await operation(sandbox);
+      }
+      throw error;
+    }
+  }
+
   async compileLatex(
     projectId: string,
     filename: string = 'main.tex',
   ): Promise<{ success: boolean; output: string; pdfBase64?: string }> {
     try {
-      const sandbox = await this.getSandboxForProject(projectId);
-
-      const result = await sandbox.process.executeCommand(
-        `latexmk -pdf -interaction=nonstopmode ${filename}`,
+      const result = await this.withSandbox(projectId, (sandbox) =>
+        sandbox.process.executeCommand(
+          `latexmk -pdf -interaction=nonstopmode ${filename}`,
+        ),
       );
 
       const output = result.result || '';
@@ -121,7 +198,9 @@ export class DaytonaSandboxService implements OnModuleInit {
       const pdfFile = filename.replace('.tex', '.pdf');
 
       try {
-        const pdfData = await sandbox.fs.downloadFile(pdfFile);
+        const pdfData = await this.withSandbox(projectId, (sandbox) =>
+          sandbox.fs.downloadFile(pdfFile),
+        );
         const pdfBase64 = Buffer.from(pdfData).toString('base64');
         return { success: true, output, pdfBase64 };
       } catch {
@@ -140,8 +219,9 @@ export class DaytonaSandboxService implements OnModuleInit {
     code: string,
   ): Promise<{ output: string; exitCode: number }> {
     try {
-      const sandbox = await this.getSandboxForProject(projectId);
-      const result = await sandbox.process.executeCommand(code);
+      const result = await this.withSandbox(projectId, (sandbox) =>
+        sandbox.process.executeCommand(code),
+      );
       return { output: result.result || '', exitCode: result.exitCode };
     } catch (error) {
       return {
@@ -153,8 +233,9 @@ export class DaytonaSandboxService implements OnModuleInit {
 
   async readFile(projectId: string, path: string): Promise<string | null> {
     try {
-      const sandbox = await this.getSandboxForProject(projectId);
-      const buffer = await sandbox.fs.downloadFile(path);
+      const buffer = await this.withSandbox(projectId, (sandbox) =>
+        sandbox.fs.downloadFile(path),
+      );
       return Buffer.from(buffer).toString('utf-8');
     } catch (error) {
       this.logger.warn(
@@ -170,8 +251,9 @@ export class DaytonaSandboxService implements OnModuleInit {
     content: string,
   ): Promise<void> {
     try {
-      const sandbox = await this.getSandboxForProject(projectId);
-      await sandbox.fs.uploadFile(Buffer.from(content), path);
+      await this.withSandbox(projectId, (sandbox) =>
+        sandbox.fs.uploadFile(Buffer.from(content), path),
+      );
     } catch (error) {
       this.logger.error(
         `Error writing file ${path} in sandbox for project ${projectId}: ${error}`,
@@ -182,8 +264,9 @@ export class DaytonaSandboxService implements OnModuleInit {
 
   async deleteFile(projectId: string, path: string): Promise<void> {
     try {
-      const sandbox = await this.getSandboxForProject(projectId);
-      await sandbox.fs.deleteFile(path);
+      await this.withSandbox(projectId, (sandbox) =>
+        sandbox.fs.deleteFile(path),
+      );
     } catch (error) {
       this.logger.warn(
         `Could not delete file ${path} in sandbox for project ${projectId}: ${error}`,
@@ -201,8 +284,16 @@ export class DaytonaSandboxService implements OnModuleInit {
       where: { projectId },
     });
 
-    const sandbox = await this.getSandboxForProject(projectId);
+    await this.withSandbox(projectId, (sandbox) =>
+      this.syncSandboxFiles(sandbox, docs, projectId),
+    );
+  }
 
+  private async syncSandboxFiles(
+    sandbox: Sandbox,
+    docs: LaTeXDocument[],
+    projectId: string,
+  ): Promise<void> {
     // 1. Upload every DB document
     for (const doc of docs) {
       const dirName = doc.title.includes('/')
@@ -241,6 +332,10 @@ export class DaytonaSandboxService implements OnModuleInit {
   /**
    * Stops the running sandbox to free CPU/RAM while keeping the filesystem.
    * Call this when the user closes the project workspace.
+   *
+   * Note: container sandboxes (like our texlive image) do not support the SDK's
+   * pause()/resume() — the resume path is stop()/start(), which
+   * getSandboxForProject already does via ensureSandboxStarted().
    */
   async pauseSandbox(projectId: string): Promise<void> {
     const sandbox = this.runningSandboxes.get(projectId);
@@ -294,8 +389,9 @@ export class DaytonaSandboxService implements OnModuleInit {
 
   async listFiles(projectId: string): Promise<string[]> {
     try {
-      const sandbox = await this.getSandboxForProject(projectId);
-      const filesInfo = await sandbox.fs.listFiles('.');
+      const filesInfo = await this.withSandbox(projectId, (sandbox) =>
+        sandbox.fs.listFiles('.'),
+      );
       return filesInfo
         .filter((f) => f.name.endsWith('.tex'))
         .map((f) => f.name);
